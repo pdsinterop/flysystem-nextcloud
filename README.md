@@ -52,7 +52,7 @@ To use the adapter, instantiate it and add it to a Flysystem filesystem:
 $folder = $rootFolder->getUserFolder('userId')->get('/some/directory');
 
 // Create the Nextcloud Adapter
-$adapter = new \Pdsinterop\Rdf\Flysystem\Adapter\Nextcloud($folder);
+$adapter = new \Pdsinterop\Flysystem\Adapter\Nextcloud($folder);
 
 // Create Flysystem as usual, adding the Adapter
 $filesystem = new \League\Flysystem\Filesystem($adapter);
