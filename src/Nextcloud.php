@@ -203,7 +203,7 @@ class Nextcloud implements AdapterInterface
         $result = [];
 
         try {
-            $node = $this->folder->get($directory);
+            $node = $this->folder->get("/" . $directory);
         } catch (\OCP\Files\NotFoundException $exception) {
             return [];
         }
@@ -354,20 +354,29 @@ class Nextcloud implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        $result = false;
+        $result = true;
 
         try {
-            $node = $this->folder->get($path);
-        } catch (\OCP\Files\NotFoundException $exception) {
+            if ($this->folder->nodeExists($path)) {
+                $node = $this->folder->get($path);
+                if (method_exists($node, 'putContent')) {
+                    $node->putContent($contents);
+
+                    $result = $this->normalizeNodeInfo($node, [
+                        'contents' => $node->getContent(),
+                    ]);
+                }
+            } else {
+                $filename = basename($path);
+                $dirname = dirname($path);
+                if (!$this->folder->nodeExists($dirname)) {
+                    $this->folder->newFolder($dirname);
+                }
+                $node = $this->folder->get($dirname);
+                $node->newFile($filename, $contents);
+            }
+        } catch(\Exception $e) {
             return false;
-        }
-
-        if (method_exists($node, 'putContent')) {
-            $node->putContent($contents);
-
-            $result = $this->normalizeNodeInfo($node, [
-                'contents' => $node->getContent(),
-            ]);
         }
 
         return $result;
@@ -440,13 +449,11 @@ class Nextcloud implements AdapterInterface
      */
     private function normalizeNodeInfo(\OCP\Files\Node $node, array $metaData = []) : array
     {
-        // @CHECKME: Check the MIME Type for directory. I think it might be 'httpd/unix-directory'.
-        //           I don't think that is what we want?
-
         return array_merge([
-            'mimetype' => $node->getMimetype(),
-            'path' => $node->getPath(),
+            'mimetype' => $this->isDirectory($node) ? "directory" : $node->getMimetype(),
+            'path' => substr($node->getPath(), strlen($this->folder->getPath())+1),
             'size' => $node->getSize(),
+            'basename' => basename($node->getPath()),
             'timestamp' => $node->getMTime(),
             'type' => $node->getType(),
             // @FIXME: Use $node->getPermissions() to set private or public
