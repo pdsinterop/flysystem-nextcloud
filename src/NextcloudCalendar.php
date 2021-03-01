@@ -388,7 +388,7 @@ class NextcloudCalendar implements AdapterInterface
 
     private function normalizeCalendarItem($calendarItem, $basePath) {
         return array(
-            'mimetype' => 'file',
+            'mimetype' => 'text/calendar',
             'path' => $basePath . '/' . $calendarItem['uri'],
             'basename' => $calendarItem['uri'],
             'timestamp' => $calendarItem['lastmodified'],
