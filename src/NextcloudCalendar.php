@@ -20,10 +20,11 @@ use OCA\DAV\Connector\Sabre\Principal;
  */
 class NextcloudCalendar implements AdapterInterface
 {
-    /** @var Folder */
-    private $folder;
+    private $defaultAcl;
+    private $userId;
+    private $principalUri;
 
-    final public function __construct($userId)
+    final public function __construct($userId, $defaultAcl)
     {
         $this->userId = $userId;
         $this->principalUri = "principals/users/" . $this->userId;
@@ -127,10 +128,6 @@ class NextcloudCalendar implements AdapterInterface
 	            return $calendar['id'];
             }
         }
-    }
-
-    public function setDefaultAcl($defaultAcl) {
-        $this->defaultAcl = $defaultAcl;
     }
 
     /**
