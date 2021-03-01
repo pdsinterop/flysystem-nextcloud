@@ -157,12 +157,15 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function getMetadata($path)
     {
-        try {
-            $node = $this->folder->get($path);
-            return $this->normalizeNodeInfo($node);
-        } catch (\OCP\Files\NotFoundException $exception) {
+        $path = explode("/", $path);
+        if (sizeof($path) == 1) {
+            $calendar = $this->calDavBackend->getCalendarByUri("principals/users/" . $this->userId, $path[0]);
+            if ($calendar) {
+	        return $this->normalizeCalendar($calendar);
+            }
             return false;
         }
+        return false;
     }
 
     /**
@@ -222,11 +225,15 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function has($path)
     {
-        $calendar = $this->calDavBackend->getCalendarByUri($this->userId, $path);
-        if ($calendar) {
-            return true;
-        }
-        return false;
+	$path = explode("/", $path);
+	if (sizeof($path) == 1) {
+            $calendar = $this->calDavBackend->getCalendarByUri("principals/users/" . $this->userId, $path[0]);
+            if ($calendar) {
+                return true;
+            }
+	    return false;
+	}
+	return false;
     }
 
     /**
@@ -239,7 +246,6 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function listContents($directory = '', $recursive = false)
     {
-        error_log("Reading calendar $directory");
         $result = [];
         if ($directory === "") {
             $calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
@@ -249,13 +255,19 @@ class NextcloudCalendar implements AdapterInterface
 
             return $result;
         } else {
-            error_log("Reading calendar $directory");
             $directory = basename($directory);
 
-            $calendar = $this->calDavBackend->getCalendarByUri($this->userId, $directory);
-            error_log("calendar " . json_encode($calendar));
-            $contents = $this->calDavBackend->getCalendarObjects($calendar['id']);
-            error_log("contents " . json_encode($contents));
+            $calendar = $this->calDavBackend->getCalendarByUri("principals/users/" . $this->userId, $directory);
+	    $calendarObjects = $this->calDavBackend->getCalendarObjects($calendar['id']);
+	    $contents = [];
+
+	    foreach ($calendarObjects as $calendarObject) {
+                $contents[] = $this->calDavBackend->getCalendarObject($calendarObject['calendarid'], $calendarObject['uri']);
+            }
+	    $result = array_map(function($calendarItem) use ($directory) {
+                return $this->normalizeCalendarItem($calendarItem, $directory);
+	    }, $contents);
+	    return $result;
         }
     }
 
@@ -468,25 +480,23 @@ class NextcloudCalendar implements AdapterInterface
         return $result;
     }
 
-    /**
-     * @param \OCP\Files\Node $node
-     *
-     * @return bool
-     */
     private function isDirectory(\OCP\Files\Node $node)
     {
         return $node->getType() === \OCP\Files\FileInfo::TYPE_FOLDER;
     }
 
-    /**
-     * @param \OCP\Files\Node $node
-     * @param array $metaData
-     *
-     * @return array
-     *
-     * @throws \OCP\Files\InvalidPathException
-     * @throws \OCP\Files\NotFoundException
-     */
+    private function normalizeCalendarItem($calendarItem, $basePath) {
+        return array(
+	    'mimetype' => 'file',
+	    'path' => $basePath . '/' . $calendarItem['uri'],
+	    'basename' => $calendarItem['uri'],
+	    'timestamp' => $calendarItem['lastmodified'],
+	    'size' => $calendarItem['size'],
+	    'type' => "file",
+	    'visibility' => 'public'
+	);
+    }
+
     private function normalizeCalendar($calendar)
     {
         return array(
