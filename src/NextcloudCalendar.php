@@ -28,33 +28,33 @@ class NextcloudCalendar implements AdapterInterface
 
     final public function __construct($userId)
     {
-	$this->userId = $userId;
+    $this->userId = $userId;
 
-	$authBackend = new Auth(
-		\OC::$server->getSession(),
-		\OC::$server->getUserSession(),
-		\OC::$server->getRequest(),
-		\OC::$server->getTwoFactorAuthManager(),
-		\OC::$server->getBruteForceThrottler(),
-		'principals/'
-	);
-	$principalBackend = new Principal(
-		\OC::$server->getUserManager(),
-		\OC::$server->getGroupManager(),
-		\OC::$server->getShareManager(),
-		\OC::$server->getUserSession(),
-		\OC::$server->getAppManager(),
-		\OC::$server->query(\OCA\DAV\CalDAV\Proxy\ProxyMapper::class),
-		\OC::$server->getConfig(),
-		'principals/'
-	);
-	$db = \OC::$server->getDatabaseConnection();
-	$userManager = \OC::$server->getUserManager();
-	$random = \OC::$server->getSecureRandom();
-	$logger = \OC::$server->getLogger();
-	$dispatcher = \OC::$server->getEventDispatcher();
+    $authBackend = new Auth(
+        \OC::$server->getSession(),
+        \OC::$server->getUserSession(),
+        \OC::$server->getRequest(),
+        \OC::$server->getTwoFactorAuthManager(),
+        \OC::$server->getBruteForceThrottler(),
+        'principals/'
+    );
+    $principalBackend = new Principal(
+        \OC::$server->getUserManager(),
+        \OC::$server->getGroupManager(),
+        \OC::$server->getShareManager(),
+        \OC::$server->getUserSession(),
+        \OC::$server->getAppManager(),
+        \OC::$server->query(\OCA\DAV\CalDAV\Proxy\ProxyMapper::class),
+        \OC::$server->getConfig(),
+        'principals/'
+    );
+    $db = \OC::$server->getDatabaseConnection();
+    $userManager = \OC::$server->getUserManager();
+    $random = \OC::$server->getSecureRandom();
+    $logger = \OC::$server->getLogger();
+    $dispatcher = \OC::$server->getEventDispatcher();
 
-	$this->calDavBackend = new CalDavBackend($db, $principalBackend, $userManager, \OC::$server->getGroupManager(), $random, $logger, $dispatcher, true);	
+    $this->calDavBackend = new CalDavBackend($db, $principalBackend, $userManager, \OC::$server->getGroupManager(), $random, $logger, $dispatcher, true);	
     }
 
     /**
@@ -218,11 +218,15 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|bool|null
+     * @return bool
      */
     final public function has($path)
     {
-        return $this->folder->nodeExists($path);
+        $calendar = $this->calDavBackend->getCalendarByUri($this->userId, $path);
+        if ($calendar) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -235,25 +239,24 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function listContents($directory = '', $recursive = false)
     {
-	error_log("Reading calendar $directory");
+        error_log("Reading calendar $directory");
         $result = [];
-	if ($directory === "") {
-		$calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
+        if ($directory === "") {
+            $calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
+            $result = array_map(function ($calendar) {
+                return $this->normalizeCalendar($calendar);
+            }, $calendars);
 
-	        $result = array_map(function ($calendar) {
-	            return $this->normalizeCalendar($calendar);
-	        }, $calendars);
+            return $result;
+        } else {
+            error_log("Reading calendar $directory");
+            $directory = basename($directory);
 
-	        return $result;
-	} else {
-		error_log("Reading calendar $directory");
-		$directory = basename($directory);
-
-		$calendar = $this->calDavBackend->getCalendarByUri($this->userId, $directory);
-		error_log("calendar " . json_encode($calendar));
-		$contents = $this->calDavBackend->getCalendarObjects($calendar['id']);
-		error_log("contents " . json_encode($contents));
-	}
+            $calendar = $this->calDavBackend->getCalendarByUri($this->userId, $directory);
+            error_log("calendar " . json_encode($calendar));
+            $contents = $this->calDavBackend->getCalendarObjects($calendar['id']);
+            error_log("contents " . json_encode($contents));
+        }
     }
 
     /**
@@ -488,11 +491,11 @@ class NextcloudCalendar implements AdapterInterface
     {
         return array(
             'mimetype' => "directory",
-	    'path' => $calendar['uri'],
-	    'size' => 0,
+            'path' => $calendar['uri'],
+            'size' => 0,
             'basename' => basename($calendar['uri']),
-	    'timestamp' => 0,
-	    'type' => "dir",
+            'timestamp' => 0,
+            'type' => "dir",
             // @FIXME: Use $node->getPermissions() to set private or public
             //         as soon as we figure out what Nextcloud permissions mean in this context
             'visibility' => 'public',
