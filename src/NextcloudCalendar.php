@@ -209,6 +209,14 @@ class NextcloudCalendar implements AdapterInterface
         $calendarId = $this->getCalendarId($path);
         if ($calendarId) {
             return true;
+        } else {
+            $filename = basename($path);
+            $calendar = dirname($path);
+            $calendarId = $this->getCalendarId($calendar);
+            $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
+            if ($calendarItem) {
+                return true;
+            }
         }
         return false;
     }
