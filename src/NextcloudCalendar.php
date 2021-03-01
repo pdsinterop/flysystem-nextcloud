@@ -272,7 +272,7 @@ class NextcloudCalendar implements AdapterInterface
         if (!$calendarItem) {
             return false;
         }
-        return $this->normalizeCalendarItem($calendarItem);
+        return $this->normalizeCalendarItem($calendarItem, $calendar);
     }
 
     /**
