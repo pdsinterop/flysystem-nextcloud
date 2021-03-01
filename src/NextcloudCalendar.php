@@ -28,6 +28,7 @@ class NextcloudCalendar implements AdapterInterface
     {
         $this->userId = $userId;
         $this->principalUri = "principals/users/" . $this->userId;
+	$this->defaultAcl = $defaultAcl;
 
         $authBackend = new Auth(
             \OC::$server->getSession(),
