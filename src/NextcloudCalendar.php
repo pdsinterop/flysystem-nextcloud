@@ -26,8 +26,10 @@ class NextcloudCalendar implements AdapterInterface
     /** @var Folder */
     private $folder;
 
-    final public function __construct()
+    final public function __construct($userId)
     {
+	$this->userId = $userId;
+
 	$authBackend = new Auth(
 		\OC::$server->getSession(),
 		\OC::$server->getUserSession(),
@@ -230,22 +232,28 @@ class NextcloudCalendar implements AdapterInterface
      * @param bool $recursive
      *
      * @return array
-     *
-     * @throws \OCP\Files\InvalidPathException
-     * @throws \OCP\Files\NotFoundException
      */
     final public function listContents($directory = '', $recursive = false)
     {
+	error_log("Reading calendar $directory");
         $result = [];
-	$calendars = $this->calDavBackend->getCalendarsForUser("alice");
-	error_log(print_r($calendars, true));
-	return [];
+	if ($directory === "") {
+		$calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
 
-        $result = array_map(function (\OCP\Calendar\Calendar $calendar) {
-            return $this->normalizeNodeInfo($calendar);
-        }, $calendars);
+	        $result = array_map(function ($calendar) {
+	            return $this->normalizeCalendar($calendar);
+	        }, $calendars);
 
-        return $result;
+	        return $result;
+	} else {
+		error_log("Reading calendar $directory");
+		$directory = basename($directory);
+
+		$calendar = $this->calDavBackend->getCalendarByUri($this->userId, $directory);
+		error_log("calendar " . json_encode($calendar));
+		$contents = $this->calDavBackend->getCalendarObjects($calendar['id']);
+		error_log("contents " . json_encode($contents));
+	}
     }
 
     /**
@@ -476,15 +484,15 @@ class NextcloudCalendar implements AdapterInterface
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotFoundException
      */
-    private function normalizeNodeInfo(\OCP\Files\Node $node, array $metaData = []) : array
+    private function normalizeCalendar($calendar)
     {
-        return array_merge([
-            'mimetype' => $this->isDirectory($node) ? "directory" : $node->getMimetype(),
-            'path' => substr($node->getPath(), strlen($this->folder->getPath())+1),
-            'size' => $node->getSize(),
-            'basename' => basename($node->getPath()),
-            'timestamp' => $node->getMTime(),
-            'type' => $node->getType(),
+        return array(
+            'mimetype' => "directory",
+	    'path' => $calendar['uri'],
+	    'size' => 0,
+            'basename' => basename($calendar['uri']),
+	    'timestamp' => 0,
+	    'type' => "dir",
             // @FIXME: Use $node->getPermissions() to set private or public
             //         as soon as we figure out what Nextcloud permissions mean in this context
             'visibility' => 'public',
@@ -493,6 +501,6 @@ class NextcloudCalendar implements AdapterInterface
             'Etag' => $node->getEtag(),
             'Owner' => $node->getOwner(),
             /*/
-        ], $metaData);
+        );
     }
 }
