@@ -138,15 +138,22 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function getMetadata($path)
     {
-        $path = explode("/", $path);
-        if (sizeof($path) == 1) {
-            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $path[0]);
-            if ($calendar) {
-	        return $this->normalizeCalendar($calendar);
+        $calendarId = $this->getCalendarId($path);
+        if ($calendarId) {
+            $calendar = $this->calDavBackend->getCalendarById($calendarId);
+            return $this->normalizeCalendar($calendar);
+        } else {
+            $filename = basename($path);
+            $calendar = dirname($path);
+            $calendarId = $this->getCalendarId($calendar);
+            $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
+            if ($calendarItem) {
+                return $this->normalizeCalendarItem($calendarItem, $calendar);
             }
-            return false;
         }
         return false;
+
+        $path = explode("/", $path);
     }
 
     /**
