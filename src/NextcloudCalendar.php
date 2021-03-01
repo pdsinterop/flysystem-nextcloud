@@ -129,6 +129,10 @@ class NextcloudCalendar implements AdapterInterface
         }
     }
 
+    public function setDefaultAcl($defaultAcl) {
+        $this->defaultAcl = $defaultAcl;
+    }
+
     /**
      * Get all the meta data of a file or directory.
      *
@@ -213,6 +217,10 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function has($path)
     {
+        if ($path == ".acl" && $this->defaultAcl) {
+            return true;
+        }
+
         $calendarId = $this->getCalendarId($path);
         if ($calendarId) {
             return true;
@@ -272,6 +280,10 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function read($path)
     {
+        if ($path == ".acl" && $this->defaultAcl) {
+            return $this->normalizeAcl($this->defaultAcl);
+        }
+
         $filename = basename($path);
         $calendar = dirname($path);
         $calendarId = $this->getCalendarId($calendar);
@@ -386,6 +398,18 @@ class NextcloudCalendar implements AdapterInterface
         return false;
     }
 
+    private function normalizeAcl($acl) {
+        return array(
+            'mimetype' => 'text/turtle',
+            'path' => ".acl",
+            'basename' => ".acl",
+            'timestamp' => 0,
+            'size' => strlen($acl),
+            'type' => "file",
+            'visibility' => 'public',
+            'contents' => $acl
+        );
+    }
     private function normalizeCalendarItem($calendarItem, $basePath) {
         return array(
             'mimetype' => 'text/calendar',
