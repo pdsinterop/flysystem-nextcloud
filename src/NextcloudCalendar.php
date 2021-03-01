@@ -122,7 +122,7 @@ class NextcloudCalendar implements AdapterInterface
     private function getCalendarId($path) {
         $path = explode("/", $path);
         if (sizeof($path) == 1) {
-            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUrl, $path[0]);
+            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $path[0]);
             if ($calendar) {
 	            return $calendar['id'];
             }
@@ -140,7 +140,7 @@ class NextcloudCalendar implements AdapterInterface
     {
         $path = explode("/", $path);
         if (sizeof($path) == 1) {
-            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUrl, $path[0]);
+            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $path[0]);
             if ($calendar) {
 	        return $this->normalizeCalendar($calendar);
             }
