@@ -143,7 +143,7 @@ class NextcloudProfile implements AdapterInterface
         if ($path == ".acl" && $this->defaultAcl) {
             return true;
         }
-        if ($path == "profile") {
+        if ($path == "turtle") {
             return true;
         }
         return false;
@@ -177,7 +177,7 @@ class NextcloudProfile implements AdapterInterface
         if ($path == ".acl" && $this->defaultAcl) {
             return $this->normalizeAcl($this->defaultAcl);
         }
-        if ($path == "profile") {
+        if ($path == "turtle") {
             return $this->normalizeProfile()
         }
         return false;
@@ -260,7 +260,7 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        if ($path == "profile") {
+        if ($path == "turtle") {
             $this->config->setProfileData($userId, $contents);
             return true;
         }
@@ -296,8 +296,8 @@ class NextcloudProfile implements AdapterInterface
     private function normalizeProfile($profile) {
         return array(
             'mimetype' => 'text/turtle',
-            'path' => "profile",
-            'basename' => "profile",
+            'path' => "turtle",
+            'basename' => "turtle",
             'timestamp' => 0,
             'size' => strlen($profile),
             'type' => "file",
