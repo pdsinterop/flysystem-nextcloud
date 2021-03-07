@@ -19,6 +19,7 @@ class NextcloudProfile implements AdapterInterface
         $this->userId = $userId;
         $this->defaultAcl = $defaultAcl;
         $this->config = $config;
+        $this->profile = $profile;
     }
 
     /**
@@ -293,7 +294,8 @@ class NextcloudProfile implements AdapterInterface
             'contents' => $acl
         );
     }
-    private function normalizeProfile($profile) {
+    private function normalizeProfile() {
+        $profile = $this->profile;
         return array(
             'mimetype' => 'text/turtle',
             'path' => "turtle",
