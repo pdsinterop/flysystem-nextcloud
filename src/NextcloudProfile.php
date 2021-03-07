@@ -178,7 +178,7 @@ class NextcloudProfile implements AdapterInterface
             return $this->normalizeAcl($this->defaultAcl);
         }
         if ($path == "turtle") {
-            return $this->normalizeProfile()
+            return $this->normalizeProfile();
         }
         return false;
     }
@@ -303,6 +303,6 @@ class NextcloudProfile implements AdapterInterface
             'type' => "file",
             'visibility' => 'public',
             'contents' => $profile
-        )
+        );
     }
 }
