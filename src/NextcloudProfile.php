@@ -262,7 +262,7 @@ class NextcloudProfile implements AdapterInterface
     final public function write($path, $contents, Config $config)
     {
         if ($path == "turtle") {
-            $this->config->setProfileData($userId, $contents);
+            $this->config->setProfileData($this->userId, $contents);
             return true;
         }
         return false;
