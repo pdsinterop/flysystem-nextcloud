@@ -49,8 +49,6 @@ class NextcloudContacts implements AdapterInterface
         );
         $db = \OC::$server->getDatabaseConnection();
         $userManager = \OC::$server->getUserManager();
-        $random = \OC::$server->getSecureRandom();
-        $logger = \OC::$server->getLogger();
         $dispatcher = \OC::$server->getEventDispatcher();
 
         $this->cardDavBackend = new CardDavBackend(
@@ -58,8 +56,6 @@ class NextcloudContacts implements AdapterInterface
             $principalBackend,
             $userManager,
             \OC::$server->getGroupManager(),
-            $random,
-            $logger,
             $dispatcher,
             true
         );	
