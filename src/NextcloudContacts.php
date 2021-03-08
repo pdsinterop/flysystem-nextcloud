@@ -6,11 +6,7 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
 use OCA\DAV\CardDAV\CardDavBackend;
-use OCA\DAV\Connector\LegacyDAVACL;
-use OCA\DAV\CardDav\AddressBookRoot;
 use OCA\DAV\Connector\Sabre\Auth;
-use OCA\DAV\Connector\Sabre\ExceptionLoggerPlugin;
-use OCA\DAV\Connector\Sabre\MaintenancePlugin;
 use OCA\DAV\Connector\Sabre\Principal;
 
 
@@ -29,14 +25,6 @@ class NextcloudContacts implements AdapterInterface
         $this->principalUri = "principals/users/" . $this->userId;
         $this->defaultAcl = $defaultAcl;
 
-        $authBackend = new Auth(
-            \OC::$server->getSession(),
-            \OC::$server->getUserSession(),
-            \OC::$server->getRequest(),
-            \OC::$server->getTwoFactorAuthManager(),
-            \OC::$server->getBruteForceThrottler(),
-            'principals/'
-        );
         $principalBackend = new Principal(
             \OC::$server->getUserManager(),
             \OC::$server->getGroupManager(),
@@ -305,7 +293,7 @@ class NextcloudContacts implements AdapterInterface
      */
     final public function readStream($path)
     {
-        return false;
+        return $this->read($path);
     }
 
     /**
@@ -395,7 +383,7 @@ class NextcloudContacts implements AdapterInterface
      */
     final public function writeStream($path, $resource, Config $config)
     {
-        return false;
+        return $this->write($path, $resource, $config);
     }
 
     private function normalizeAcl($acl) {

@@ -4,14 +4,9 @@ namespace Pdsinterop\Flysystem\Adapter;
 
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
-use OCP\Files\Folder;
 
 use OCA\DAV\CalDAV\CalDavBackend;
-use OCA\DAV\Connector\LegacyDAVACL;
-use OCA\DAV\CalDAV\CalendarRoot;
 use OCA\DAV\Connector\Sabre\Auth;
-use OCA\DAV\Connector\Sabre\ExceptionLoggerPlugin;
-use OCA\DAV\Connector\Sabre\MaintenancePlugin;
 use OCA\DAV\Connector\Sabre\Principal;
 
 
@@ -30,14 +25,6 @@ class NextcloudCalendar implements AdapterInterface
         $this->principalUri = "principals/users/" . $this->userId;
         $this->defaultAcl = $defaultAcl;
 
-        $authBackend = new Auth(
-            \OC::$server->getSession(),
-            \OC::$server->getUserSession(),
-            \OC::$server->getRequest(),
-            \OC::$server->getTwoFactorAuthManager(),
-            \OC::$server->getBruteForceThrottler(),
-            'principals/'
-        );
         $principalBackend = new Principal(
             \OC::$server->getUserManager(),
             \OC::$server->getGroupManager(),
@@ -301,7 +288,7 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function readStream($path)
     {
-        return false;
+        return $this->read($path);
     }
 
     /**
@@ -369,8 +356,6 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        $result = true;
-
         $filename = basename($path);
         $calendar = dirname($path);
         $calendarId = $this->getCalendarId($calendar);
@@ -393,7 +378,7 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function writeStream($path, $resource, Config $config)
     {
-        return false;
+        return $this->write($path, $resource, $config);
     }
 
     private function normalizeAcl($acl) {
@@ -430,8 +415,6 @@ class NextcloudCalendar implements AdapterInterface
             'basename' => basename($calendar['uri']),
             'timestamp' => 0,
             'type' => "dir",
-            // @FIXME: Use $node->getPermissions() to set private or public
-            //         as soon as we figure out what Nextcloud permissions mean in this context
             'visibility' => 'public',
             /*/
             'CreationTime' => $node->getCreationTime(),
