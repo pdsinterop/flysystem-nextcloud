@@ -2,17 +2,26 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
+use League\Flysystem\Adapter\Polyfill\StreamedTrait;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
+use OCA\Solid\ServerConfig;
 
 /**
- * Filesystem adapter to access profile infromation from Nextcloud
+ * Filesystem adapter to access profile information from Nextcloud
  */
 class NextcloudProfile implements AdapterInterface
 {
-    private $defaultAcl;
-    private $userId;
+    use StreamedTrait;
+
+    /** @var ServerConfig */
     private $config;
+    /** @var string */
+    private $defaultAcl;
+    /** @var string */
+    private $profile;
+    /** @var string */
+    private $userId;
 
     final public function __construct($userId, $profile, $defaultAcl, $config)
     {
@@ -141,10 +150,10 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function has($path)
     {
-        if ($path == ".acl" && $this->defaultAcl) {
+        if ($path === '.acl' && $this->defaultAcl) {
             return true;
         }
-        if ($path == "turtle") {
+        if ($path === 'turtle') {
             return true;
         }
         return false;
@@ -160,10 +169,9 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function listContents($directory = '', $recursive = false)
     {
-        $result = [
+        return [
             $this->normalizeProfile()
         ];
-        return $result;
     }
 
     /**
@@ -175,25 +183,13 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function read($path)
     {
-        if ($path == ".acl" && $this->defaultAcl) {
+        if ($path === '.acl' && $this->defaultAcl) {
             return $this->normalizeAcl($this->defaultAcl);
         }
-        if ($path == "turtle") {
+        if ($path === 'turtle') {
             return $this->normalizeProfile();
         }
         return false;
-    }
-
-    /**
-     * Read a file as a stream.
-     *
-     * @param string $path
-     *
-     * @return array|false
-     */
-    final public function readStream($path)
-    {
-        return $this->read($path);
     }
 
     /**
@@ -237,20 +233,6 @@ class NextcloudProfile implements AdapterInterface
     }
 
     /**
-     * Update a file using a stream.
-     *
-     * @param string $path
-     * @param resource $resource
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     */
-    final public function updateStream($path, $resource, Config $config)
-    {
-        return false;
-    }
-
-    /**
      * Write a new file.
      *
      * @param string $path
@@ -261,50 +243,37 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        if ($path == "turtle") {
+        if ($path === 'turtle') {
             $this->config->setProfileData($this->userId, $contents);
             return true;
         }
         return false;
     }
 
-    /**
-     * Write a new file using a stream.
-     *
-     * @param string $path
-     * @param resource $resource
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     */
-    final public function writeStream($path, $resource, Config $config)
-    {
-        return $this->write($path, $resource, $config);
+    private function normalizeAcl($acl) {
+        return [
+            'basename' => '.acl',
+            'contents' => $acl,
+            'mimetype' => 'text/turtle',
+            'path' => '.acl',
+            'size' => strlen($acl),
+            'timestamp' => 0,
+            'type' => 'file',
+            'visibility' => 'public',
+        ];
     }
 
-    private function normalizeAcl($acl) {
-        return array(
-            'mimetype' => 'text/turtle',
-            'path' => ".acl",
-            'basename' => ".acl",
-            'timestamp' => 0,
-            'size' => strlen($acl),
-            'type' => "file",
-            'visibility' => 'public',
-            'contents' => $acl
-        );
-    }
     private function normalizeProfile() {
         $profile = $this->profile;
-        return array(
+        return [
+            'basename' => 'turtle',
+            'contents' => $profile,
             'mimetype' => 'text/turtle',
-            'path' => "turtle",
-            'basename' => "turtle",
-            'timestamp' => 0,
+            'path' => 'turtle',
             'size' => strlen($profile),
-            'type' => "file",
+            'timestamp' => 0,
+            'type' => 'file',
             'visibility' => 'public',
-            'contents' => $profile
-        );
+        ];
     }
 }
