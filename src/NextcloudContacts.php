@@ -27,7 +27,7 @@ class NextcloudContacts implements AdapterInterface
     {
         $this->userId = $userId;
         $this->principalUri = "principals/users/" . $this->userId;
-	$this->defaultAcl = $defaultAcl;
+        $this->defaultAcl = $defaultAcl;
 
         $authBackend = new Auth(
             \OC::$server->getSession(),
@@ -130,7 +130,7 @@ class NextcloudContacts implements AdapterInterface
         if (sizeof($path) == 1) {
             $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $path[0]);
             if ($addressBook) {
-	            return $addressBook['id'];
+                return $addressBook['id'];
             }
         }
     }
@@ -260,16 +260,16 @@ class NextcloudContacts implements AdapterInterface
             $directory = basename($directory);
 
             $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $directory);
-    	    $cards = $this->cardDavBackend->getCards($addressBook['id']);
-    	    $contents = [];
+            $cards = $this->cardDavBackend->getCards($addressBook['id']);
+            $contents = [];
 
-    	    foreach ($cards as $card) {
+            foreach ($cards as $card) {
                 $contents[] = $this->cardDavBackend->getCard($addressBook['id'], $card['uri']);
             }
-	        $result = array_map(function($card) use ($directory) {
+            $result = array_map(function($card) use ($directory) {
                 return $this->normalizeCard($card, $directory);
-	        }, $contents);
-    	    return $result;
+            }, $contents);
+            return $result;
         }
     }
 

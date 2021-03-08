@@ -28,7 +28,7 @@ class NextcloudCalendar implements AdapterInterface
     {
         $this->userId = $userId;
         $this->principalUri = "principals/users/" . $this->userId;
-	$this->defaultAcl = $defaultAcl;
+        $this->defaultAcl = $defaultAcl;
 
         $authBackend = new Auth(
             \OC::$server->getSession(),
@@ -126,7 +126,7 @@ class NextcloudCalendar implements AdapterInterface
         if (sizeof($path) == 1) {
             $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $path[0]);
             if ($calendar) {
-	            return $calendar['id'];
+                return $calendar['id'];
             }
         }
     }
@@ -256,16 +256,16 @@ class NextcloudCalendar implements AdapterInterface
             $directory = basename($directory);
 
             $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $directory);
-    	    $calendarObjects = $this->calDavBackend->getCalendarObjects($calendar['id']);
-    	    $contents = [];
+            $calendarObjects = $this->calDavBackend->getCalendarObjects($calendar['id']);
+            $contents = [];
 
-    	    foreach ($calendarObjects as $calendarObject) {
+            foreach ($calendarObjects as $calendarObject) {
                 $contents[] = $this->calDavBackend->getCalendarObject($calendarObject['calendarid'], $calendarObject['uri']);
             }
-	        $result = array_map(function($calendarItem) use ($directory) {
+            $result = array_map(function($calendarItem) use ($directory) {
                 return $this->normalizeCalendarItem($calendarItem, $directory);
-	        }, $contents);
-    	    return $result;
+            }, $contents);
+            return $result;
         }
     }
 
