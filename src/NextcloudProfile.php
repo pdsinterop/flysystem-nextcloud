@@ -193,7 +193,7 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function readStream($path)
     {
-        return false;
+        return $this->read($path);
     }
 
     /**
@@ -279,7 +279,7 @@ class NextcloudProfile implements AdapterInterface
      */
     final public function writeStream($path, $resource, Config $config)
     {
-        return false;
+        return $this->write($path, $resource, $config);
     }
 
     private function normalizeAcl($acl) {
