@@ -7,7 +7,7 @@ use League\Flysystem\Config;
 
 use OCA\DAV\CardDAV\CardDavBackend;
 use OCA\DAV\Connector\LegacyDAVACL;
-use OCA\DAV\cardDav\CalendarRoot;
+use OCA\DAV\CardDav\AddressBookRoot;
 use OCA\DAV\Connector\Sabre\Auth;
 use OCA\DAV\Connector\Sabre\ExceptionLoggerPlugin;
 use OCA\DAV\Connector\Sabre\MaintenancePlugin;
@@ -17,7 +17,7 @@ use OCA\DAV\Connector\Sabre\Principal;
 /**
  * Filesystem adapter to convert RDF files to and from a default format
  */
-class NextcloudCalendar implements AdapterInterface
+class NextcloudContacts implements AdapterInterface
 {
     private $defaultAcl;
     private $userId;
@@ -43,7 +43,7 @@ class NextcloudCalendar implements AdapterInterface
             \OC::$server->getShareManager(),
             \OC::$server->getUserSession(),
             \OC::$server->getAppManager(),
-            \OC::$server->query(\OCA\DAV\cardDav\Proxy\ProxyMapper::class),
+            \OC::$server->query(\OCA\DAV\CalDav\Proxy\ProxyMapper::class),
             \OC::$server->getConfig(),
             'principals/'
         );
@@ -156,7 +156,7 @@ class NextcloudCalendar implements AdapterInterface
             $filename = basename($path);
             $addressBook = dirname($path);
             $addressBookId = $this->getAddressBookId($addressBook);
-            $contact = $this->cardDavBackend->getContactObject($addressBookId, $filename);
+            $contact = $this->cardDavBackend->getCards($addressBookId, $filename);
             if ($contact) {
                 return $this->normalizeContact($contact, $addressBook);
             }
@@ -234,7 +234,7 @@ class NextcloudCalendar implements AdapterInterface
             $filename = basename($path);
             $addressBook = dirname($path);
             $addressBookId = $this->getAddressBookId($addressBook);
-            $contact = $this->cardDavBackend->getContactObject($addressBookId, $filename);
+            $contact = $this->cardDavBackend->getCard($addressBookId, $filename);
             if ($contact) {
                 return true;
             }
@@ -264,11 +264,11 @@ class NextcloudCalendar implements AdapterInterface
             $directory = basename($directory);
 
             $addressBook = $this->cardDavBackend->getAddressBookByUri($this->principalUri, $directory);
-    	    $contacts = $this->cardDavBackend->getContactObjects($addressBook['id']);
+    	    $contacts = $this->cardDavBackend->getCards($addressBook['id']);
     	    $contents = [];
 
     	    foreach ($contacts as $contact) {
-                $contents[] = $this->cardDavBackend->getContactObject($contact['addressbookid'], $contact['uri']);
+                $contents[] = $this->cardDavBackend->getCard($contact['addressbookid'], $contact['uri']);
             }
 	        $result = array_map(function($contact) use ($directory) {
                 return $this->normalizeContact($contact, $directory);
@@ -293,7 +293,7 @@ class NextcloudCalendar implements AdapterInterface
         $filename = basename($path);
         $addressBook = dirname($path);
         $addressBookId = $this->getAddressBookId($addressBook);
-        $contact = $this->cardDavBackend->getContactObject($addressBookId, $filename);
+        $contact = $this->cardDavBackend->getCard($addressBookId, $filename);
         if (!$contact) {
             return false;
         }
@@ -381,9 +381,9 @@ class NextcloudCalendar implements AdapterInterface
         $addressBook = dirname($path);
         $addressBookId = $this->getAddressBookId($addressBook);
         if ($this->has($path)) {
-            $this->cardDavBackend->updateAddressBookObject($addressBookId, $filename, $contents);
+            $this->cardDavBackend->updateCard($addressBookId, $filename, $contents);
         } else {
-            $this->cardDavBackend->createAddressBookObject($addressBookId, $filename, $contents);
+            $this->cardDavBackend->createCard($addressBookId, $filename, $contents);
         }
         return true;
     }
