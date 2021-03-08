@@ -7,7 +7,7 @@ use League\Flysystem\Config;
 use OCP\Files\Folder;
 
 /**
- * Filesystem adapter to convert RDF files to and from a default format
+ * Filesystem adapter to access files in Nextcloud
  */
 class Nextcloud implements AdapterInterface
 {
