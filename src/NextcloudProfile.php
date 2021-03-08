@@ -6,7 +6,7 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
 /**
- * Filesystem adapter to convert RDF files to and from a default format
+ * Filesystem adapter to access profile infromation from Nextcloud
  */
 class NextcloudProfile implements AdapterInterface
 {

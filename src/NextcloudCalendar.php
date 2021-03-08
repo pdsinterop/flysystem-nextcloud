@@ -6,12 +6,11 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
 use OCA\DAV\CalDAV\CalDavBackend;
-use OCA\DAV\Connector\Sabre\Auth;
 use OCA\DAV\Connector\Sabre\Principal;
 
 
 /**
- * Filesystem adapter to convert RDF files to and from a default format
+ * Filesystem adapter to access calendar infromation from Nextcloud
  */
 class NextcloudCalendar implements AdapterInterface
 {

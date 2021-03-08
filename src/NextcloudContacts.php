@@ -6,12 +6,11 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
 use OCA\DAV\CardDAV\CardDavBackend;
-use OCA\DAV\Connector\Sabre\Auth;
 use OCA\DAV\Connector\Sabre\Principal;
 
 
 /**
- * Filesystem adapter to convert RDF files to and from a default format
+ * Filesystem adapter to access contacts infromation from Nextcloud
  */
 class NextcloudContacts implements AdapterInterface
 {
