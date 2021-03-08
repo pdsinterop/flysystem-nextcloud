@@ -101,7 +101,7 @@ class NextcloudContacts implements AdapterInterface
      */
     final public function delete($path)
     {
-        [$addressBook, $filename] = $this->splitPath($path);
+        list($addressBook, $filename) = $this->splitPath($path);
         $addressBookId = $this->getAddressBookId($addressBook);
         $this->cardDavBackend->deleteCard($addressBookId, $filename);
         return true;
@@ -151,7 +151,7 @@ class NextcloudContacts implements AdapterInterface
             $addressBook = $this->cardDavBackend->getAddressBookById($addressBookId);
             return $this->normalizeAddressBook($addressBook);
         } else {
-            [$addressBook, $filename] = $this->splitPath($path);
+            list($addressBook, $filename) = $this->splitPath($path);
             $addressBookId = $this->getAddressBookId($addressBook);
             $card = $this->cardDavBackend->getCard($addressBookId, $filename);
             return $this->normalizeCard($card, $addressBook);
@@ -223,7 +223,7 @@ class NextcloudContacts implements AdapterInterface
         if ($addressBookId !== null) {
             return true;
         } else {
-            [$addressBook, $filename] = $this->splitPath($path);
+            list($addressBook, $filename) = $this->splitPath($path);
             $addressBookId = $this->getAddressBookId($addressBook);
             $card = $this->cardDavBackend->getCard($addressBookId, $filename);
 
@@ -277,7 +277,7 @@ class NextcloudContacts implements AdapterInterface
             return $this->normalizeAcl($this->defaultAcl);
         }
 
-        [$addressBook, $filename] = $this->splitPath($path);
+        list($addressBook, $filename) = $this->splitPath($path);
         $addressBookId = $this->getAddressBookId($addressBook);
         $card = $this->cardDavBackend->getCard($addressBookId, $filename);
 
@@ -337,7 +337,7 @@ class NextcloudContacts implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        [$addressBook, $filename] = $this->splitPath($path);
+        list($addressBook, $filename) = $this->splitPath($path);
         $addressBookId = $this->getAddressBookId($addressBook);
         if ($this->has($path)) {
             $this->cardDavBackend->updateCard($addressBookId, $filename, $contents);

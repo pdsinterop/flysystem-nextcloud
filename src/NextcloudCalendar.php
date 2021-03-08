@@ -106,7 +106,7 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function delete($path)
     {
-        [$calendar, $filename] = $this->splitPath($path);
+        list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
         $this->calDavBackend->deleteCalendarObject($calendarId, $filename);
         return true;
@@ -156,7 +156,7 @@ class NextcloudCalendar implements AdapterInterface
             $calendar = $this->calDavBackend->getCalendarById($calendarId);
             return $this->normalizeCalendar($calendar);
         } else {
-            [$calendar, $filename] = $this->splitPath($path);
+            list($calendar, $filename) = $this->splitPath($path);
             $calendarId = $this->getCalendarId($calendar);
             $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
             return $this->normalizeCalendarItem($calendarItem, $calendar);
@@ -228,7 +228,7 @@ class NextcloudCalendar implements AdapterInterface
         if ($calendarId !== null) {
             return true;
         } else {
-            [$calendar, $filename] = $this->splitPath($path);
+            list($calendar, $filename) = $this->splitPath($path);
             $calendarId = $this->getCalendarId($calendar);
             $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
 
@@ -282,7 +282,7 @@ class NextcloudCalendar implements AdapterInterface
             return $this->normalizeAcl($this->defaultAcl);
         }
 
-        [$calendar, $filename] = $this->splitPath($path);
+        list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
         $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
 
@@ -342,7 +342,7 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        [$calendar, $filename] = $this->splitPath($path);
+        list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
         if ($this->has($path)) {
             $this->calDavBackend->updateCalendarObject($calendarId, $filename, $contents);
