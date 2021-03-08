@@ -92,7 +92,7 @@ class NextcloudContacts implements AdapterInterface
     }
 
     /**
-     * Delete a contact.
+     * Delete a card.
      *
      * @param string $path
      *
@@ -103,7 +103,7 @@ class NextcloudContacts implements AdapterInterface
         $filename = basename($path);
         $addressBook = dirname($path);
         $addressBookId = $this->getAddressBookId($addressBook);
-        $this->cardDavBackend->deleteContact($addressBookId, $filename);
+        $this->cardDavBackend->deleteCard($addressBookId, $filename);
         return true;
     }
 
@@ -128,7 +128,7 @@ class NextcloudContacts implements AdapterInterface
     private function getAddressBookId($path) {
         $path = explode("/", $path);
         if (sizeof($path) == 1) {
-            $addressBook = $this->cardDavBackend->getAddressBookByUri($this->principalUri, $path[0]);
+            $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $path[0]);
             if ($addressBook) {
 	            return $addressBook['id'];
             }
@@ -152,9 +152,9 @@ class NextcloudContacts implements AdapterInterface
             $filename = basename($path);
             $addressBook = dirname($path);
             $addressBookId = $this->getAddressBookId($addressBook);
-            $contact = $this->cardDavBackend->getCards($addressBookId, $filename);
-            if ($contact) {
-                return $this->normalizeContact($contact, $addressBook);
+            $card = $this->cardDavBackend->getCard($addressBookId, $filename);
+            if ($card) {
+                return $this->normalizeCard($card, $addressBook);
             }
         }
         return false;
@@ -230,8 +230,8 @@ class NextcloudContacts implements AdapterInterface
             $filename = basename($path);
             $addressBook = dirname($path);
             $addressBookId = $this->getAddressBookId($addressBook);
-            $contact = $this->cardDavBackend->getCard($addressBookId, $filename);
-            if ($contact) {
+            $card = $this->cardDavBackend->getCard($addressBookId, $filename);
+            if ($card) {
                 return true;
             }
         }
@@ -259,15 +259,15 @@ class NextcloudContacts implements AdapterInterface
         } else {
             $directory = basename($directory);
 
-            $addressBook = $this->cardDavBackend->getAddressBookByUri($this->principalUri, $directory);
-    	    $contacts = $this->cardDavBackend->getCards($addressBook['id']);
+            $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $directory);
+    	    $cards = $this->cardDavBackend->getCards($addressBook['id']);
     	    $contents = [];
 
-    	    foreach ($contacts as $contact) {
-                $contents[] = $this->cardDavBackend->getCard($contact['addressbookid'], $contact['uri']);
+    	    foreach ($cards as $card) {
+                $contents[] = $this->cardDavBackend->getCard($addressBook['id'], $card['uri']);
             }
-	        $result = array_map(function($contact) use ($directory) {
-                return $this->normalizeContact($contact, $directory);
+	        $result = array_map(function($card) use ($directory) {
+                return $this->normalizeCard($card, $directory);
 	        }, $contents);
     	    return $result;
         }
@@ -289,11 +289,11 @@ class NextcloudContacts implements AdapterInterface
         $filename = basename($path);
         $addressBook = dirname($path);
         $addressBookId = $this->getAddressBookId($addressBook);
-        $contact = $this->cardDavBackend->getCard($addressBookId, $filename);
-        if (!$contact) {
+        $card = $this->cardDavBackend->getCard($addressBookId, $filename);
+        if (!$card) {
             return false;
         }
-        return $this->normalizeContact($contact, $addressBook);
+        return $this->normalizeCard($card, $addressBook);
     }
 
     /**
@@ -410,16 +410,16 @@ class NextcloudContacts implements AdapterInterface
             'contents' => $acl
         );
     }
-    private function normalizeContact($contact, $basePath) {
+    private function normalizeCard($card, $basePath) {
         return array(
             'mimetype' => 'text/vcard',
-            'path' => $basePath . '/' . $contact['uri'],
-            'basename' => $contact['uri'],
-            'timestamp' => $contact['lastmodified'],
-            'size' => $contact['size'],
+            'path' => $basePath . '/' . $card['uri'],
+            'basename' => $card['uri'],
+            'timestamp' => $card['lastmodified'],
+            'size' => $card['size'],
             'type' => "file",
             'visibility' => 'public',
-            'contents' => $contact['vcarddata']
+            'contents' => $card['carddata']
         );
     }
 
