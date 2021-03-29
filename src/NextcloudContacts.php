@@ -47,7 +47,8 @@ class NextcloudContacts implements AdapterInterface
         );
         $db = OC::$server->getDatabaseConnection();
         $userManager = OC::$server->getUserManager();
-        $dispatcher = OC::$server->getEventDispatcher();
+        $dispatcher = OC::$server->get(\OCP\EventDispatcher\IEventDispatcher::class);
+        $legacyDispatcher = OC::$server->getEventDispatcher();
 
         $this->cardDavBackend = new CardDavBackend(
             $db,
@@ -55,6 +56,7 @@ class NextcloudContacts implements AdapterInterface
             $userManager,
             OC::$server->getGroupManager(),
             $dispatcher,
+            $legacyDispatcher,
             true
         );
     }
