@@ -50,8 +50,8 @@ class NextcloudCalendar implements AdapterInterface
         $userManager = OC::$server->getUserManager();
         $random = OC::$server->getSecureRandom();
         $logger = OC::$server->getLogger();
-        $dispatcher = OC::$server->getEventDispatcher();
-
+        $dispatcher = OC::$server->get(\OCP\EventDispatcher\IEventDispatcher::class);
+        $legacyDispatcher = OC::$server->getEventDispatcher();
         $this->calDavBackend = new CalDavBackend(
             $db,
             $principalBackend,
@@ -60,6 +60,7 @@ class NextcloudCalendar implements AdapterInterface
             $random,
             $logger,
             $dispatcher,
+            $legacyDispatcher,
             true
         );
     }
