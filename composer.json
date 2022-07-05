@@ -8,7 +8,7 @@
     "sort-packages": true,
     "bin-dir": "./bin",
     "platform": {
-      "php": "7.2",
+      "php": "8.0",
       "ext-mbstring": "0.0.0"
     }
   },
@@ -20,9 +20,9 @@
       "type": "package",
       "package": {
         "name": "nextcloud/server",
-        "version": "20.0.1",
+        "version": "24.0.0",
         "dist": {
-          "url": "https://github.com/nextcloud/server/releases/download/v20.0.1/nextcloud-20.0.1.zip",
+          "url": "https://github.com/nextcloud/server/archive/refs/tags/v24.0.0.zip",
           "type": "zip"
         },
         "source": {
@@ -42,7 +42,7 @@
     }
   ],
   "require": {
-    "php": "^7.2",
+    "php": "^8.0",
     "ext-mbstring": "*",
     "league/flysystem": "^1.0"
   },

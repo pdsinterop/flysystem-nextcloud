@@ -153,6 +153,7 @@ class NextcloudProfile implements AdapterInterface
         if ($path === '.acl' && $this->defaultAcl) {
             return true;
         }
+
         if ($path === 'card') {
             return true;
         }
@@ -269,7 +270,7 @@ class NextcloudProfile implements AdapterInterface
             'basename' => 'card',
             'contents' => $profile,
             'mimetype' => 'text/turtle',
-            'path' => 'card',
+            'path' => "card",
             'size' => strlen($profile),
             'timestamp' => 0,
             'type' => 'file',
