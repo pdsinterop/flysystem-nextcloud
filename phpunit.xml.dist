@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+
+    beStrictAboutCoversAnnotation="true"
+    beStrictAboutOutputDuringTests="true"
+    beStrictAboutTodoAnnotatedTests="true"
+    bootstrap="vendor/autoload.php"
+    cacheResultFile=".phpunit.cache/test-results"
+    convertDeprecationsToExceptions="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    forceCoversAnnotation="true"
+    verbose="true"
+>
+    <testsuites>
+        <testsuite name="all">
+          <directory suffix=".php">tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage processUncoveredFiles="false">
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+        <report>
+            <!-- clover outputFile="build/clover.xml"/ -->
+            <!-- html outputDirectory="build/coverage"/ -->
+            <text outputFile="php://stdout"/>
+        </report>
+    </coverage>
+</phpunit>
