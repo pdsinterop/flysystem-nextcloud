@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="../vendor/phpunit/phpunit/phpunit.xsd"
 
     beStrictAboutCoversAnnotation="true"
     beStrictAboutOutputDuringTests="true"
     beStrictAboutTodoAnnotatedTests="true"
-    bootstrap="vendor/autoload.php"
-    cacheResultFile=".phpunit.cache/test-results"
+    bootstrap="../vendor/autoload.php"
+    cacheResultFile="../.phpunit.cache/test-results"
     convertDeprecationsToExceptions="true"
     failOnRisky="true"
     failOnWarning="true"
@@ -16,13 +16,13 @@
 >
     <testsuites>
         <testsuite name="all">
-          <directory suffix=".php">tests/</directory>
+          <directory suffix=".php">../tests/</directory>
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="false">
+    <coverage cacheDirectory="../.phpunit.cache/code-coverage" processUncoveredFiles="false">
         <include>
-            <directory suffix=".php">src/</directory>
+            <directory suffix=".php">../src/</directory>
         </include>
         <report>
             <!-- clover outputFile="build/clover.xml"/ -->
