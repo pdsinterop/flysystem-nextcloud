@@ -7,22 +7,21 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
 use OC;
-use OCA\DAV\CalDAV\CalDavBackend;
-use OCA\DAV\CalDAV\Proxy\ProxyMapper;
+use OCA\DAV\CalDav\Proxy\ProxyMapper;
+use OCA\DAV\CardDAV\CardDavBackend;
 use OCA\DAV\Connector\Sabre\Principal;
-use Sabre\DAV\Exception;
 use Sabre\DAV\Exception\BadRequest;
 
 
 /**
- * Filesystem adapter to access calendar information from Nextcloud
+ * Filesystem adapter to access contacts information from Nextcloud
  */
-class NextcloudCalendar implements AdapterInterface
+class NextcloudContacts implements AdapterInterface
 {
     use StreamedTrait;
 
-    /** @var CalDavBackend */
-    private $calDavBackend;
+    /** @var CardDavBackend */
+    private $cardDavBackend;
     /** @var string */
     private $defaultAcl;
     /** @var string */
@@ -48,17 +47,14 @@ class NextcloudCalendar implements AdapterInterface
         );
         $db = OC::$server->getDatabaseConnection();
         $userManager = OC::$server->getUserManager();
-        $random = OC::$server->getSecureRandom();
-        $logger = OC::$server->getLogger();
         $dispatcher = OC::$server->get(\OCP\EventDispatcher\IEventDispatcher::class);
         $legacyDispatcher = OC::$server->getEventDispatcher();
-        $this->calDavBackend = new CalDavBackend(
+
+        $this->cardDavBackend = new CardDavBackend(
             $db,
             $principalBackend,
             $userManager,
             OC::$server->getGroupManager(),
-            $random,
-            $logger,
             $dispatcher,
             $legacyDispatcher,
             true
@@ -80,26 +76,26 @@ class NextcloudCalendar implements AdapterInterface
     }
 
     /**
-     * Create a calendar.
+     * Create an address book.
      *
-     * @param string $calendarName calendar name
+     * @param string $addressBookName address book name
      * @param Config $config
      *
      * @return array|false
      *
-     * @throws Exception
+     * @throws BadRequest
      */
-    final public function createDirectory($calendarName, Config $config)
+    final public function createDirectory($addressBookName, Config $config)
     {
-        $calendarId = $this->calDavBackend->createCalendar($this->principalUri, $calendarName, []);
-        if ($calendarId !== null) {
-            return ['path' => $calendarName, 'type' => 'dir'];
+        $addressBookId = $this->cardDavBackend->createAddressBook($this->principalUri, $addressBookName, array());
+        if ($addressBookId !== null) {
+            return ['path' => $addressBookName, 'type' => 'dir'];
         }
         return false;
     }
 
     /**
-     * Delete a calendar item.
+     * Delete a card.
      *
      * @param string $path
      *
@@ -107,36 +103,36 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function delete($path)
     {
-        list($calendar, $filename) = $this->splitPath($path);
-        $calendarId = $this->getCalendarId($calendar);
-        $this->calDavBackend->deleteCalendarObject($calendarId, $filename);
+        list($addressBook, $filename) = $this->splitPath($path);
+        $addressBookId = $this->getAddressBookId($addressBook);
+        $this->cardDavBackend->deleteCard($addressBookId, $filename);
         return true;
     }
 
     /**
-     * Delete a calendar.
+     * Delete an addressBook.
      *
-     * @param string $calendar
+     * @param string $addressBook
      *
      * @return bool
      */
-    final public function deleteDirectory($calendar)
+    final public function deleteDirectory($addressBook)
     {
-        $calendarId = $this->getCalendarId($calendar);
-        if (!$calendarId) {
+        $addressBookId = $this->getAddressBookId($addressBook);
+        if (!$addressBookId) {
             return false;
         }
 
-        $this->calDavBackend->deleteCalendar($calendarId);
+        $this->cardDavBackend->deleteAddressBook($addressBookId);
         return true;
     }
 
-    private function getCalendarId($path) {
+    private function getAddressBookId($path) {
         $path = explode('/', $path);
         if (count($path) === 1) {
-            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $path[0]);
-            if ($calendar) {
-                return $calendar['id'];
+            $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $path[0]);
+            if ($addressBook) {
+                return $addressBook['id'];
             }
         }
 
@@ -152,15 +148,15 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function getMetadata($path)
     {
-        $calendarId = $this->getCalendarId($path);
-        if ($calendarId !== null) {
-            $calendar = $this->calDavBackend->getCalendarById($calendarId);
-            return $this->normalizeCalendar($calendar);
+        $addressBookId = $this->getAddressBookId($path);
+        if ($addressBookId !== null) {
+            $addressBook = $this->cardDavBackend->getAddressBookById($addressBookId);
+            return $this->normalizeAddressBook($addressBook);
         } else {
-            list($calendar, $filename) = $this->splitPath($path);
-            $calendarId = $this->getCalendarId($calendar);
-            $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
-            return $this->normalizeCalendarItem($calendarItem, $calendar);
+            list($addressBook, $filename) = $this->splitPath($path);
+            $addressBookId = $this->getAddressBookId($addressBook);
+            $card = $this->cardDavBackend->getCard($addressBookId, $filename);
+            return $this->normalizeCard($card, $addressBook);
         }
     }
 
@@ -225,23 +221,30 @@ class NextcloudCalendar implements AdapterInterface
             return true;
         }
 
-        $calendarId = $this->getCalendarId($path);
-        if ($calendarId !== null) {
+        $addressBookId = $this->getAddressBookId($path);
+        if ($addressBookId !== null) {
             return true;
         } else {
-            list($calendar, $filename) = $this->splitPath($path);
-            $calendarId = $this->getCalendarId($calendar);
-            $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
+            list($addressBook, $filename) = $this->splitPath($path);
+            $addressBookId = $this->getAddressBookId($addressBook);
+            $card = $this->cardDavBackend->getCard($addressBookId, $filename);
 
-            return is_array($calendarItem);
+            return is_array($card);
         }
     }
 
+    /**
+     * Check whether a directory exists.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
     final public function directoryExists($path)
     {
         return $this->fileExists($path);
     }
-
+    
     /**
      * List contents of a directory.
      *
@@ -253,24 +256,24 @@ class NextcloudCalendar implements AdapterInterface
     final public function listContents($directory = '', $recursive = false)
     {
         if ($directory === '') {
-            $calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
+            $addressBooks = $this->cardDavBackend->getAddressBooksForUser($this->userId);
 
-            return array_map(function ($calendar) {
-                return $this->normalizeCalendar($calendar);
-            }, $calendars);
+            return array_map(function ($addressBook) {
+                return $this->normalizeAddressBook($addressBook);
+            }, $addressBooks);
         } else {
             $directory = basename($directory);
 
-            $calendar = $this->calDavBackend->getCalendarByUri($this->principalUri, $directory);
-            $calendarObjects = $this->calDavBackend->getCalendarObjects($calendar['id']);
+            $addressBook = $this->cardDavBackend->getAddressBooksByUri($this->principalUri, $directory);
+            $cards = $this->cardDavBackend->getCards($addressBook['id']);
 
             $contents = [];
-            foreach ($calendarObjects as $calendarObject) {
-                $contents[] = $this->calDavBackend->getCalendarObject($calendarObject['calendarid'], $calendarObject['uri']);
+            foreach ($cards as $card) {
+                $contents[] = $this->cardDavBackend->getCard($addressBook['id'], $card['uri']);
             }
 
-            return array_map(function($calendarItem) use ($directory) {
-                return $this->normalizeCalendarItem($calendarItem, $directory);
+            return array_map(function($card) use ($directory) {
+                return $this->normalizeCard($card, $directory);
             }, $contents);
         }
     }
@@ -288,11 +291,11 @@ class NextcloudCalendar implements AdapterInterface
             return $this->normalizeAcl($this->defaultAcl);
         }
 
-        list($calendar, $filename) = $this->splitPath($path);
-        $calendarId = $this->getCalendarId($calendar);
-        $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
+        list($addressBook, $filename) = $this->splitPath($path);
+        $addressBookId = $this->getAddressBookId($addressBook);
+        $card = $this->cardDavBackend->getCard($addressBookId, $filename);
 
-        return $this->normalizeCalendarItem($calendarItem, $calendar);
+        return $this->normalizeCard($card, $addressBook);
     }
 
     /**
@@ -334,12 +337,12 @@ class NextcloudCalendar implements AdapterInterface
      */
     final public function write($path, $contents, Config $config)
     {
-        list($calendar, $filename) = $this->splitPath($path);
-        $calendarId = $this->getCalendarId($calendar);
+        list($addressBook, $filename) = $this->splitPath($path);
+        $addressBookId = $this->getAddressBookId($addressBook);
         if ($this->has($path)) {
-            $this->calDavBackend->updateCalendarObject($calendarId, $filename, $contents);
+            $this->cardDavBackend->updateCard($addressBookId, $filename, $contents);
         } else {
-            $this->calDavBackend->createCalendarObject($calendarId, $filename, $contents);
+            $this->cardDavBackend->createCard($addressBookId, $filename, $contents);
         }
         return true;
     }
@@ -357,32 +360,34 @@ class NextcloudCalendar implements AdapterInterface
         ];
     }
 
-    private function normalizeCalendarItem($calendarItem, $basePath) {
-        if ( ! is_array($calendarItem)) {
+    private function normalizeCard($card, $basePath) {
+        if ( ! is_array($card)) {
             return false;
         }
 
         return [
-            'basename' => $calendarItem['uri'],
-            'contents' => $calendarItem['calendardata'],
-            'mimetype' => 'text/calendar',
-            'path' => $basePath . '/' . $calendarItem['uri'],
-            'size' => $calendarItem['size'],
-            'timestamp' => $calendarItem['lastmodified'],
+            'basename' => $card['uri'],
+            'contents' => $card['carddata'],
+            'mimetype' => 'text/vcard',
+            'path' => $basePath . '/' . $card['uri'],
+            'size' => $card['size'],
+            'timestamp' => $card['lastmodified'],
             'type' => 'file',
             'visibility' => 'public',
         ];
     }
 
-    private function normalizeCalendar($calendar)
+    private function normalizeAddressBook($addressBook)
     {
         return [
-            'basename' => basename($calendar['uri']),
+            'basename' => basename($addressBook['uri']),
             'mimetype' => 'directory',
-            'path' => $calendar['uri'],
+            'path' => $addressBook['uri'],
             'size' => 0,
             'timestamp' => 0,
             'type' => 'dir',
+            // @FIXME: Use $node->getPermissions() to set private or public
+            //         as soon as we figure out what Nextcloud permissions mean in this context
             'visibility' => 'public',
             /*/
             'CreationTime' => $node->getCreationTime(),

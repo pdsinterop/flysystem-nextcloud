@@ -85,7 +85,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @throws BadRequest
      */
-    final public function createDir($addressBookName, Config $config)
+    final public function createDirectory($addressBookName, Config $config)
     {
         $addressBookId = $this->cardDavBackend->createAddressBook($this->principalUri, $addressBookName, array());
         if ($addressBookId !== null) {
@@ -116,7 +116,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return bool
      */
-    final public function deleteDir($addressBook)
+    final public function deleteDirectory($addressBook)
     {
         $addressBookId = $this->getAddressBookId($addressBook);
         if (!$addressBookId) {
@@ -167,7 +167,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getMimeType($path)
+    final public function mimeType($path)
     {
         return $this->getMetadata($path);
     }
@@ -179,7 +179,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getSize($path)
+    final public function fileSize($path)
     {
         return $this->getMetadata($path);
     }
@@ -191,7 +191,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getTimestamp($path)
+    final public function lastModified($path)
     {
         return $this->getMetadata($path);
     }
@@ -203,7 +203,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getVisibility($path)
+    final public function visibility($path)
     {
         return $this->getMetadata($path);
     }
@@ -215,7 +215,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return bool
      */
-    final public function has($path)
+    final public function fileExists($path)
     {
         if ($path === '.acl' && $this->defaultAcl) {
             return true;
@@ -231,6 +231,18 @@ class NextcloudContacts implements AdapterInterface
 
             return is_array($card);
         }
+    }
+
+    /**
+     * Check whether a directory exists.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    final public function directoryExists($path)
+    {
+        return $this->fileExists($path);
     }
 
     /**
@@ -294,7 +306,7 @@ class NextcloudContacts implements AdapterInterface
      *
      * @return bool
      */
-    final public function rename($path, $newpath)
+    final public function move($path, $newpath)
     {
         return false;
     }
@@ -310,20 +322,6 @@ class NextcloudContacts implements AdapterInterface
     final public function setVisibility($path, $visibility)
     {
         return false;
-    }
-
-    /**
-     * Update a file.
-     *
-     * @param string $path
-     * @param string $contents
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     */
-    final public function update($path, $contents, Config $config)
-    {
-        return $this->write($path, $contents, $config);
     }
 
     /**

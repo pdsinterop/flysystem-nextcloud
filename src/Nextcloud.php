@@ -50,7 +50,7 @@ class Nextcloud implements AdapterInterface
      *
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function createDir($dirname, Config $config)
+    final public function createDirectory($dirname, Config $config)
     {
         $this->folder->newFolder($dirname);
 
@@ -90,7 +90,7 @@ class Nextcloud implements AdapterInterface
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function deleteDir($dirname)
+    final public function deleteDirectory($dirname)
     {
         $result = false;
 
@@ -146,7 +146,7 @@ class Nextcloud implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getSize($path)
+    final public function fileSize($path)
     {
         return $this->getMetadata($path);
     }
@@ -158,7 +158,7 @@ class Nextcloud implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getTimestamp($path)
+    final public function lastModified($path)
     {
         return $this->getMetadata($path);
     }
@@ -170,7 +170,7 @@ class Nextcloud implements AdapterInterface
      *
      * @return array|false
      */
-    final public function getVisibility($path)
+    final public function visibility($path)
     {
         return $this->getMetadata($path);
     }
@@ -182,7 +182,19 @@ class Nextcloud implements AdapterInterface
      *
      * @return array|bool|null
      */
-    final public function has($path)
+    final public function fileExists($path)
+    {
+        return $this->folder->nodeExists($path);
+    }
+
+    /**
+     * Check whether a directory exists.
+     *
+     * @param string $path
+     *
+     * @return array|bool|null
+     */
+    final public function directoryExists($path)
     {
         return $this->folder->nodeExists($path);
     }
@@ -285,7 +297,7 @@ class Nextcloud implements AdapterInterface
      * @throws \OCP\Files\NotPermittedException
      * @throws \OCP\Lock\LockedException
      */
-    final public function rename($path, $newpath)
+    final public function move($path, $newpath)
     {
         try {
             $this->folder->get($path)->move($newpath);
@@ -307,38 +319,6 @@ class Nextcloud implements AdapterInterface
     final public function setVisibility($path, $visibility)
     {
         return false;
-    }
-
-    /**
-     * Update a file.
-     *
-     * @param string $path
-     * @param string $contents
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     *
-     * @throws \OCP\Files\InvalidPathException
-     */
-    final public function update($path, $contents, Config $config)
-    {
-        return $this->write($path, $contents, $config);
-    }
-
-    /**
-     * Update a file using a stream.
-     *
-     * @param string $path
-     * @param resource $resource
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     *
-     * @throws \OCP\Files\NotPermittedException
-     */
-    final public function updateStream($path, $resource, Config $config)
-    {
-        return $this->writeStream($path, $resource, $config);
     }
 
     /**
@@ -409,7 +389,7 @@ class Nextcloud implements AdapterInterface
 
             // @CHECKME: Do we need to create a directory or will the Node do that for us?
             if ($folder === false) {
-                $this->createDir($dirname, $config);
+                $this->createDirectory($dirname, $config);
             }
 
             $stream = $node->fopen('w+b');
