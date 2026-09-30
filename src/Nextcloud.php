@@ -25,6 +25,7 @@ class Nextcloud implements FilesystemAdapter
      *
      * @param string $path
      * @param string $newpath
+     * @param Config $config
      */
     final public function copy(string $path, string $newpath, Config $config): void
     {
@@ -309,8 +310,6 @@ class Nextcloud implements FilesystemAdapter
      */
     final public function write(string $path, string $contents, Config $config): void
     {
-        $result = true;
-
         try {
             if ($this->folder->nodeExists($path)) {
                 $node = $this->folder->get($path);
