@@ -2,14 +2,15 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\AdapterInterface;
+use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Config;
 use OCP\Files\Folder;
 
 /**
  * Filesystem adapter to access files in Nextcloud
  */
-class Nextcloud implements AdapterInterface
+class Nextcloud implements FilesystemAdapter
 {
     /** @var Folder */
     private $folder;
@@ -24,20 +25,16 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
-     *
-     * @return bool
      */
-    final public function copy($path, $newpath)
+    final public function copy(string $path, string $newpath, Config $config): void
     {
         try {
             $node = $this->folder->get($path);
         } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
+            return;
         }
 
         $node->copy($newpath);
-
-        return true;
     }
 
     /**
@@ -46,15 +43,11 @@ class Nextcloud implements AdapterInterface
      * @param string $dirname directory name
      * @param Config $config
      *
-     * @return array|false
-     *
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function createDirectory($dirname, Config $config)
+    final public function createDirectory(string $dirname, Config $config): void
     {
         $this->folder->newFolder($dirname);
-
-        return ['path' => $dirname, 'type' => 'dir'];
     }
 
     /**
@@ -62,22 +55,18 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return bool
-     *
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function delete($path)
+    final public function delete(string $path): void
     {
         try {
             $node = $this->folder->get($path);
         } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
+            return;
         }
 
         $node->delete();
-
-        return true;
     }
 
     /**
@@ -85,27 +74,20 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $dirname
      *
-     * @return bool
-     *
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function deleteDirectory($dirname)
+    final public function deleteDirectory(string $dirname): void
     {
-        $result = false;
-
         try {
             $node = $this->folder->get($dirname);
         } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
+            return;
         }
 
         if ($this->isDirectory($node)) {
             $node->delete();
-            $result = true;
         }
-
-        return $result;
     }
 
     /**
@@ -113,15 +95,22 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      *
      * @throws \OCP\Files\InvalidPathException
      */
-    final public function getMetadata($path)
+    final public function getAttributes(string $path): FileAttributes
     {
         try {
             $node = $this->folder->get($path);
-            return $this->normalizeNodeInfo($node);
+            $metaData = $this->normalizeNodeInfo($node);
+            return new FileAttributes(
+                $path,
+                $metaData['size'],
+                $metaData['visibility'],
+                $metaData['timestamp'],
+                $metaData['mimetype']
+            );
         } catch (\OCP\Files\NotFoundException $exception) {
             return false;
         }
@@ -132,11 +121,11 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getMimeType($path)
+    final public function mimeType(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -144,11 +133,11 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function fileSize($path)
+    final public function fileSize(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -156,11 +145,11 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function lastModified($path)
+    final public function lastModified(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -168,11 +157,11 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function visibility($path)
+    final public function visibility(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -180,9 +169,9 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|bool|null
+     * @return bool
      */
-    final public function fileExists($path)
+    final public function fileExists(string $path): bool
     {
         return $this->folder->nodeExists($path);
     }
@@ -192,9 +181,9 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|bool|null
+     * @return bool
      */
-    final public function directoryExists($path)
+    final public function directoryExists(string $path): bool
     {
         return $this->folder->nodeExists($path);
     }
@@ -210,7 +199,7 @@ class Nextcloud implements AdapterInterface
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotFoundException
      */
-    final public function listContents($directory = '', $recursive = false)
+    final public function listContents(string $directory = '', bool $recursive = false): iterable
     {
         $result = [];
 
@@ -236,11 +225,11 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return string
      *
      * @throws \OCP\Files\InvalidPathException
      */
-    final public function read($path)
+    final public function read(string $path): string
     {
         $result = false;
 
@@ -251,12 +240,9 @@ class Nextcloud implements AdapterInterface
         }
 
         if (method_exists($node, 'getContent')) {
-            $result = $this->normalizeNodeInfo($node, [
-                'contents' => $node->getContent(),
-            ]);
+            return $node->getContent();
         }
-
-        return $result;
+        // FIXME: throw exception
     }
 
     /**
@@ -266,7 +252,7 @@ class Nextcloud implements AdapterInterface
      *
      * @return array|false
      */
-    final public function readStream($path)
+    final public function readStream(string $path)
     {
         $result = false;
 
@@ -277,12 +263,9 @@ class Nextcloud implements AdapterInterface
         }
 
         if (method_exists($node, 'fopen')) {
-            $result = $this->normalizeNodeInfo($node, [
-                'stream' => $node->fopen('rb'),
-            ]);
+            return $node->fopen('rb');
         }
-
-        return $result;
+        // FIXME: throw exception
     }
 
     /**
@@ -291,21 +274,17 @@ class Nextcloud implements AdapterInterface
      * @param string $path
      * @param string $newpath
      *
-     * @return bool
-     *
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotPermittedException
      * @throws \OCP\Lock\LockedException
      */
-    final public function move($path, $newpath)
+    final public function move(string $path, string $newpath): void
     {
         try {
             $this->folder->get($path)->move($newpath);
         } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
+            return;
         }
-
-        return true;
     }
 
     /**
@@ -313,12 +292,10 @@ class Nextcloud implements AdapterInterface
      *
      * @param string $path
      * @param string $visibility
-     *
-     * @return array|false file meta data
      */
-    final public function setVisibility($path, $visibility)
+    final public function setVisibility(string $path, string $visibility): void
     {
-        return false;
+        // FIXME: implement something here
     }
 
     /**
@@ -328,11 +305,9 @@ class Nextcloud implements AdapterInterface
      * @param string $contents
      * @param Config $config Config object
      *
-     * @return array|false false on failure file meta data on success
-     *
      * @throws \OCP\Files\InvalidPathException
      */
-    final public function write($path, $contents, Config $config)
+    final public function write(string $path, string $contents, Config $config): void
     {
         $result = true;
 
@@ -341,10 +316,6 @@ class Nextcloud implements AdapterInterface
                 $node = $this->folder->get($path);
                 if (method_exists($node, 'putContent')) {
                     $node->putContent($contents);
-
-                    $result = $this->normalizeNodeInfo($node, [
-                        'contents' => $node->getContent(),
-                    ]);
                 }
             } else {
                 $filename = basename($path);
@@ -356,10 +327,8 @@ class Nextcloud implements AdapterInterface
                 $node->newFile($filename, $contents);
             }
         } catch(\Exception $e) {
-            return false;
+            // FIXME: throw?
         }
-
-        return $result;
     }
 
     /**
@@ -369,18 +338,14 @@ class Nextcloud implements AdapterInterface
      * @param resource $resource
      * @param Config $config Config object
      *
-     * @return array|false false on failure file meta data on success
-     *
      * @throws \OCP\Files\NotPermittedException
      */
-    final public function writeStream($path, $resource, Config $config)
+    final public function writeStream($path, $resource, Config $config): void
     {
-        $result = false;
-
         try {
             $node = $this->folder->get($path);
         } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
+            return;
         }
 
         if (method_exists($node, 'fopen')) {
@@ -396,16 +361,9 @@ class Nextcloud implements AdapterInterface
 
             if (stream_copy_to_stream($resource, $stream) === false) {
                 fclose($stream);
-                return false;
+                return;
             }
-
-            $result = [
-                'type' => 'file',
-                'path' => $path,
-            ];
         }
-
-        return $result;
     }
 
     /**
