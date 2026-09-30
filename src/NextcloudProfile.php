@@ -242,6 +242,15 @@ class NextcloudProfile implements FilesystemAdapter
         }
     }
 
+
+    final public function writeStream(string $path, $contents, Config $config): void
+    {
+    }
+
+    final public function readStream(string $path): void
+    {
+    }
+
     private function normalizeAcl($acl) {
         return [
             'basename' => '.acl',
