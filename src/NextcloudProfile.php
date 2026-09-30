@@ -42,7 +42,7 @@ class NextcloudProfile implements FilesystemAdapter
     final public function copy(string $path, string $newpath, Config $config): void
     {
         // FIXME: Implementation
-        return false;
+        return;
     }
 
     /**
