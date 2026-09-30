@@ -2,7 +2,6 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\Adapter\Polyfill\StreamedTrait;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Config;
@@ -13,8 +12,6 @@ use OCA\Solid\ServerConfig;
  */
 class NextcloudProfile implements FilesystemAdapter
 {
-    use StreamedTrait;
-
     /** @var ServerConfig */
     private $config;
     /** @var string */
@@ -213,8 +210,9 @@ class NextcloudProfile implements FilesystemAdapter
      *
      * @param string $path
      * @param string $newpath
+     * @param Config $config
      */
-    final public function move(string $path, string $newpath): void
+    final public function move(string $path, string $newpath, Config $config): void
     {
         return;
     }

@@ -2,7 +2,6 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\Adapter\Polyfill\StreamedTrait;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Config;
@@ -19,8 +18,6 @@ use Sabre\DAV\Exception\BadRequest;
  */
 class NextcloudContacts implements FilesystemAdapter
 {
-    use StreamedTrait;
-
     /** @var CardDavBackend */
     private $cardDavBackend;
     /** @var string */
@@ -298,8 +295,9 @@ class NextcloudContacts implements FilesystemAdapter
      *
      * @param string $path
      * @param string $newpath
+     * @param Config $config
      */
-    final public function move(string $path, string $newpath): void
+    final public function move(string $path, string $newpath, Config $config): void
     {
         return;
     }
@@ -338,6 +336,14 @@ class NextcloudContacts implements FilesystemAdapter
             $this->cardDavBackend->createCard($addressBookId, $filename, $contents);
         }
         return;
+    }
+
+    final public function writeStream(string $path, $contents, Config $config): void
+    {
+    }
+
+    final public function readStream(string $path): void
+    {
     }
 
     private function normalizeAcl($acl) {

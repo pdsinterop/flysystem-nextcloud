@@ -274,12 +274,13 @@ class Nextcloud implements FilesystemAdapter
      *
      * @param string $path
      * @param string $newpath
+     * @param Config $config
      *
      * @throws \OCP\Files\InvalidPathException
      * @throws \OCP\Files\NotPermittedException
      * @throws \OCP\Lock\LockedException
      */
-    final public function move(string $path, string $newpath): void
+    final public function move(string $path, string $newpath, Config $config): void
     {
         try {
             $this->folder->get($path)->move($newpath);

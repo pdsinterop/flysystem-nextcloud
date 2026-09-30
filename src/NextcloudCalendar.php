@@ -2,7 +2,6 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\Adapter\Polyfill\StreamedTrait;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
@@ -19,8 +18,6 @@ use Sabre\DAV\Exception\BadRequest;
  */
 class NextcloudCalendar implements AdapterInterface
 {
-    use StreamedTrait;
-
     /** @var CalDavBackend */
     private $calDavBackend;
     /** @var string */
@@ -292,8 +289,9 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
+     * @param Config $config
      */
-    final public function move(string $path, string $newpath): void
+    final public function move(string $path, string $newpath, Config $config): void
     {
         return;
     }
@@ -327,6 +325,14 @@ class NextcloudCalendar implements AdapterInterface
         } else {
             $this->calDavBackend->createCalendarObject($calendarId, $filename, $contents);
         }
+    }
+
+    final public function writeStream(string $path, $contents, Config $config): void
+    {
+    }
+
+    final public function readStream(string $path): void
+    {
     }
 
     private function normalizeAcl($acl) {
