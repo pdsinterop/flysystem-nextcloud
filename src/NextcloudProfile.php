@@ -154,7 +154,7 @@ class NextcloudProfile implements FilesystemAdapter
             return true;
         }
 
-        if ($path === 'card') {
+        if ($path === 'card' || $path === '/card') {
             return true;
         }
         return false;
