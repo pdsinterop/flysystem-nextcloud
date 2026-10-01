@@ -2,7 +2,6 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\Adapter\Polyfill\StreamedTrait;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 
@@ -19,8 +18,6 @@ use Sabre\DAV\Exception\BadRequest;
  */
 class NextcloudCalendar implements AdapterInterface
 {
-    use StreamedTrait;
-
     /** @var CalDavBackend */
     private $calDavBackend;
     /** @var string */
@@ -70,13 +67,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
-     *
-     * @return bool
      */
-    final public function copy($path, $newpath)
+    final public function copy(string $path, string $newpath): void
     {
         // FIXME: Implementation
-        return false;
+        return;
     }
 
     /**
@@ -85,50 +80,38 @@ class NextcloudCalendar implements AdapterInterface
      * @param string $calendarName calendar name
      * @param Config $config
      *
-     * @return array|false
-     *
      * @throws Exception
      */
-    final public function createDir($calendarName, Config $config)
+    final public function createDirectory(string $calendarName, Config $config): void
     {
         $calendarId = $this->calDavBackend->createCalendar($this->principalUri, $calendarName, []);
-        if ($calendarId !== null) {
-            return ['path' => $calendarName, 'type' => 'dir'];
-        }
-        return false;
     }
 
     /**
      * Delete a calendar item.
      *
      * @param string $path
-     *
-     * @return bool
      */
-    final public function delete($path)
+    final public function delete(string $path): void
     {
         list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
         $this->calDavBackend->deleteCalendarObject($calendarId, $filename);
-        return true;
     }
 
     /**
      * Delete a calendar.
      *
      * @param string $calendar
-     *
-     * @return bool
      */
-    final public function deleteDir($calendar)
+    final public function deleteDirectory(string $calendar): void
     {
         $calendarId = $this->getCalendarId($calendar);
         if (!$calendarId) {
-            return false;
+            return;
         }
 
         $this->calDavBackend->deleteCalendar($calendarId);
-        return true;
     }
 
     private function getCalendarId($path) {
@@ -148,20 +131,27 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getMetadata($path)
+    final public function getAttributes(string $path): FileAttributes
     {
         $calendarId = $this->getCalendarId($path);
         if ($calendarId !== null) {
             $calendar = $this->calDavBackend->getCalendarById($calendarId);
-            return $this->normalizeCalendar($calendar);
+            $metaData = $this->normalizeCalendar($calendar);
         } else {
             list($calendar, $filename) = $this->splitPath($path);
             $calendarId = $this->getCalendarId($calendar);
             $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
-            return $this->normalizeCalendarItem($calendarItem, $calendar);
+            $metaData = $this->normalizeCalendarItem($calendarItem, $calendar);
         }
+        return new FileAttributes(
+            $path,
+            $metaData['size'],
+            $metaData['visibility'],
+            $metaData['timestamp'],
+            $metaData['mimetype']
+        );
     }
 
     /**
@@ -169,11 +159,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getMimeType($path)
+    final public function mimeType(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -181,11 +171,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getSize($path)
+    final public function fileSize(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -193,11 +183,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getTimestamp($path)
+    final public function lastModified(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -205,11 +195,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getVisibility($path)
+    final public function visibility(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -219,7 +209,7 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @return bool
      */
-    final public function has($path)
+    final public function fileExists(string $path): bool
     {
         if ($path === '.acl' && $this->defaultAcl) {
             return true;
@@ -237,6 +227,11 @@ class NextcloudCalendar implements AdapterInterface
         }
     }
 
+    final public function directoryExists(string $path): bool
+    {
+        return $this->fileExists($path);
+    }
+
     /**
      * List contents of a directory.
      *
@@ -245,7 +240,7 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @return array
      */
-    final public function listContents($directory = '', $recursive = false)
+    final public function listContents(string $directory = '', bool $recursive = false): iterable
     {
         if ($directory === '') {
             $calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
@@ -275,19 +270,18 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return string
      */
-    final public function read($path)
+    final public function read(string $path): string
     {
         if ($path === '.acl' && $this->defaultAcl) {
-            return $this->normalizeAcl($this->defaultAcl);
+            return $this->defaultAcl;
         }
 
         list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
         $calendarItem = $this->calDavBackend->getCalendarObject($calendarId, $filename);
-
-        return $this->normalizeCalendarItem($calendarItem, $calendar);
+        return $calendarItem['calendardata'];
     }
 
     /**
@@ -295,12 +289,11 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
-     *
-     * @return bool
+     * @param Config $config
      */
-    final public function rename($path, $newpath)
+    final public function move(string $path, string $newpath, Config $config): void
     {
-        return false;
+        return;
     }
 
     /**
@@ -308,26 +301,10 @@ class NextcloudCalendar implements AdapterInterface
      *
      * @param string $path
      * @param string $visibility
-     *
-     * @return array|false file meta data
      */
-    final public function setVisibility($path, $visibility)
+    final public function setVisibility(string $path, string $visibility): void
     {
-        return false;
-    }
-
-    /**
-     * Update a file.
-     *
-     * @param string $path
-     * @param string $contents
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     */
-    final public function update($path, $contents, Config $config)
-    {
-        return $this->write($path, $contents, $config);
+        return;
     }
 
     /**
@@ -337,11 +314,9 @@ class NextcloudCalendar implements AdapterInterface
      * @param string $contents
      * @param Config $config Config object
      *
-     * @return array|false false on failure file meta data on success
-     *
      * @throws BadRequest
      */
-    final public function write($path, $contents, Config $config)
+    final public function write(string $path, string $contents, Config $config): void
     {
         list($calendar, $filename) = $this->splitPath($path);
         $calendarId = $this->getCalendarId($calendar);
@@ -350,7 +325,14 @@ class NextcloudCalendar implements AdapterInterface
         } else {
             $this->calDavBackend->createCalendarObject($calendarId, $filename, $contents);
         }
-        return true;
+    }
+
+    final public function writeStream(string $path, $contents, Config $config): void
+    {
+    }
+
+    final public function readStream(string $path): void
+    {
     }
 
     private function normalizeAcl($acl) {

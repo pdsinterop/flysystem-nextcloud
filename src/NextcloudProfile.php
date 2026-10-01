@@ -2,18 +2,16 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\Adapter\Polyfill\StreamedTrait;
-use League\Flysystem\AdapterInterface;
+use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Config;
 use OCA\Solid\ServerConfig;
 
 /**
  * Filesystem adapter to access profile information from Nextcloud
  */
-class NextcloudProfile implements AdapterInterface
+class NextcloudProfile implements FilesystemAdapter
 {
-    use StreamedTrait;
-
     /** @var ServerConfig */
     private $config;
     /** @var string */
@@ -36,13 +34,12 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
-     *
-     * @return bool
+     * @param Config $config
      */
-    final public function copy($path, $newpath)
+    final public function copy(string $path, string $newpath, Config $config): void
     {
         // FIXME: Implementation
-        return false;
+        return;
     }
 
     /**
@@ -52,33 +49,29 @@ class NextcloudProfile implements AdapterInterface
      *
      * @return array|false
      */
-    final public function createDir($dirName, Config $config)
+    final public function createDirectory(string $dirname, Config $config): void
     {
-        return false;
+        return;
     }
 
     /**
      * Delete a file.
      *
      * @param string $path
-     *
-     * @return bool
      */
-    final public function delete($path)
+    final public function delete(string $path): void
     {
-        return false;
+        return;
     }
 
     /**
      * Delete a dir.
      *
      * @param string $dirName
-     *
-     * @return bool
      */
-    final public function deleteDir($dirName)
+    final public function deleteDirectory(string $dirname): void
     {
-        return false;
+        return;
     }
 
     /**
@@ -86,11 +79,18 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getMetadata($path)
+    final public function getAttributes(string $path): FileAttributes
     {
-        return $this->normalizeProfile();
+        $metaData = $this->normalizeProfile();
+        return new FileAttributes(
+            $path,
+            $metaData['size'],
+            $metaData['visibility'],
+            $metaData['timestamp'],
+            $metaData['mimetype']
+        );
     }
 
     /**
@@ -98,11 +98,11 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getMimeType($path)
+    final public function mimeType(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -110,11 +110,11 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getSize($path)
+    final public function fileSize(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -122,11 +122,11 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getTimestamp($path)
+    final public function lastModified(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -134,11 +134,11 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return \League\Flysystem\FileAttributes
      */
-    final public function getVisibility($path)
+    final public function visibility(string $path): FileAttributes
     {
-        return $this->getMetadata($path);
+        return $this->getAttributes($path);
     }
 
     /**
@@ -148,16 +148,28 @@ class NextcloudProfile implements AdapterInterface
      *
      * @return bool
      */
-    final public function has($path)
+    final public function fileExists(string $path): bool
     {
         if ($path === '.acl' && $this->defaultAcl) {
             return true;
         }
 
-        if ($path === 'card') {
+        if ($path === 'card' || $path === '/card') {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check whether a directory exists.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    final public function directoryExists(string $path): bool
+    {
+        return $this->fileExists($path);
     }
 
     /**
@@ -168,7 +180,7 @@ class NextcloudProfile implements AdapterInterface
      *
      * @return array
      */
-    final public function listContents($directory = '', $recursive = false)
+    final public function listContents(string $directory = '', bool $recursive = false): iterable
     {
         return [
             $this->normalizeProfile()
@@ -180,17 +192,17 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      *
-     * @return array|false
+     * @return string
      */
-    final public function read($path)
+    final public function read(string $path): string
     {
         if ($path === '.acl' && $this->defaultAcl) {
-            return $this->normalizeAcl($this->defaultAcl);
+            return $this->defaultAcl;
         }
         if ($path === 'card') {
-            return $this->normalizeProfile();
+            return $this->profile;
         }
-        return false;
+        return '';
     }
 
     /**
@@ -198,12 +210,11 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      * @param string $newpath
-     *
-     * @return bool
+     * @param Config $config
      */
-    final public function rename($path, $newpath)
+    final public function move(string $path, string $newpath, Config $config): void
     {
-        return false;
+        return;
     }
 
     /**
@@ -211,26 +222,10 @@ class NextcloudProfile implements AdapterInterface
      *
      * @param string $path
      * @param string $visibility
-     *
-     * @return array|false file meta data
      */
-    final public function setVisibility($path, $visibility)
+    final public function setVisibility(string $path, string $visibility): void
     {
-        return false;
-    }
-
-    /**
-     * Update a file.
-     *
-     * @param string $path
-     * @param string $contents
-     * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
-     */
-    final public function update($path, $contents, Config $config)
-    {
-        return $this->write($path, $contents, $config);
+        return;
     }
 
     /**
@@ -239,16 +234,21 @@ class NextcloudProfile implements AdapterInterface
      * @param string $path
      * @param string $contents
      * @param Config $config Config object
-     *
-     * @return array|false false on failure file meta data on success
      */
-    final public function write($path, $contents, Config $config)
+    final public function write(string $path, string $contents, Config $config): void
     {
         if ($path === 'card') {
             $this->config->setProfileData($this->userId, $contents);
-            return true;
         }
-        return false;
+    }
+
+
+    final public function writeStream(string $path, $contents, Config $config): void
+    {
+    }
+
+    final public function readStream(string $path): void
+    {
     }
 
     private function normalizeAcl($acl) {
