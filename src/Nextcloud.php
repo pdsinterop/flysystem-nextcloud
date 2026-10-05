@@ -102,19 +102,15 @@ class Nextcloud implements FilesystemAdapter
      */
     final public function getAttributes(string $path): FileAttributes
     {
-        try {
-            $node = $this->folder->get($path);
-            $metaData = $this->normalizeNodeInfo($node);
-            return new FileAttributes(
-                $path,
-                $metaData['size'],
-                $metaData['visibility'],
-                $metaData['timestamp'],
-                $metaData['mimetype']
-            );
-        } catch (\OCP\Files\NotFoundException $exception) {
-            return false;
-        }
+        $node = $this->folder->get($path);
+        $metaData = $this->normalizeNodeInfo($node);
+        return new FileAttributes(
+            $path,
+            $metaData['size'],
+            $metaData['visibility'],
+            $metaData['timestamp'],
+            $metaData['mimetype']
+        );
     }
 
     /**
