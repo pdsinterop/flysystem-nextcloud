@@ -150,7 +150,7 @@ class NextcloudProfile implements FilesystemAdapter
      */
     final public function fileExists(string $path): bool
     {
-        if ($path === '.acl' && $this->defaultAcl) {
+        if (($path === '.acl' || $path === '/.acl') && $this->defaultAcl) {
             return true;
         }
 
