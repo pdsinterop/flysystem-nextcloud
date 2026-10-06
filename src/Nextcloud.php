@@ -210,7 +210,21 @@ class Nextcloud implements FilesystemAdapter
             $nodes = $node->getDirectoryListing();
 
             $result = array_map(function (\OCP\Files\Node $node) {
-                return $this->normalizeNodeInfo($node);
+                $attributes = $this->normalizeNodeInfo($node);
+                if ($this->isDirectory($node)) {
+                    return new DirectoryAttributes(
+                        $attributes['path'],
+                        $attributes['visibility'],
+                        $attributes['time']
+                    );
+                } else {
+                    return new FileAttributes(
+                        $attributes['path'],
+                        $attributes['size'],
+                        $attributes['visibility'],
+                        $attributes['timestamp']
+                    );
+                }
             }, $nodes);
         }
 

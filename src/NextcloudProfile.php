@@ -182,9 +182,14 @@ class NextcloudProfile implements FilesystemAdapter
      */
     final public function listContents(string $directory = '', bool $recursive = false): iterable
     {
-        return [
-            $this->normalizeProfile()
-        ];
+        $attributes = $this->normalizeProfile();
+
+        return [new FileAttributes(
+            $attributes['path'],
+            $attributes['size'],
+            $attributes['visibility'],
+            $attributes['timestamp']
+        )];
     }
 
     /**
