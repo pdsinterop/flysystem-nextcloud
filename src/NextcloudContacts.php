@@ -252,7 +252,12 @@ class NextcloudContacts implements FilesystemAdapter
             $addressBooks = $this->cardDavBackend->getAddressBooksForUser($this->userId);
 
             return array_map(function ($addressBook) {
-                return $this->normalizeAddressBook($addressBook);
+                $attributes = $this->normalizeAddressBook($addressBook);
+                return new DirectoryAttributes(
+                    $attributes['path'],
+                    $attributes['visibility'],
+                    $attributes['time']
+                );
             }, $addressBooks);
         } else {
             $directory = basename($directory);
@@ -266,7 +271,13 @@ class NextcloudContacts implements FilesystemAdapter
             }
 
             return array_map(function($card) use ($directory) {
-                return $this->normalizeCard($card, $directory);
+                $attributes = $this->normalizeCard($card, $directory);
+                return new FileAttributes(
+                    $attributes['path'],
+                    $attributes['size'],
+                    $attributes['visibility'],
+                    $attributes['timestamp']
+                );
             }, $contents);
         }
     }

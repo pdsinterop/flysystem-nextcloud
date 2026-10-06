@@ -246,7 +246,12 @@ class NextcloudCalendar implements AdapterInterface
             $calendars = $this->calDavBackend->getCalendarsForUser($this->userId);
 
             return array_map(function ($calendar) {
-                return $this->normalizeCalendar($calendar);
+                $attributes = $this->normalizeCalendar($calendar);
+                return new DirectoryAttributes(
+                    $attributes['path'],
+                    $attributes['visibility'],
+                    $attributes['time']
+                );
             }, $calendars);
         } else {
             $directory = basename($directory);
@@ -260,7 +265,13 @@ class NextcloudCalendar implements AdapterInterface
             }
 
             return array_map(function($calendarItem) use ($directory) {
-                return $this->normalizeCalendarItem($calendarItem, $directory);
+                $attributes = $this->normalizeCalendarItem($calendarItem, $directory);
+                return new FileAttributes(
+                    $attributes['path'],
+                    $attributes['size'],
+                    $attributes['visibility'],
+                    $attributes['timestamp']
+                );
             }, $contents);
         }
     }
