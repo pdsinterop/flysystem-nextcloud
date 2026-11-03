@@ -127,7 +127,7 @@ class NextcloudCalendar implements AdapterInterface
     }
 
     /**
-     * Get all the meta data of a file or directory.
+     * Get all the meta data of a file.
      *
      * @param string $path
      *
@@ -217,7 +217,7 @@ class NextcloudCalendar implements AdapterInterface
 
         $calendarId = $this->getCalendarId($path);
         if ($calendarId !== null) {
-            return true;
+            return false;
         } else {
             list($calendar, $filename) = $this->splitPath($path);
             $calendarId = $this->getCalendarId($calendar);
@@ -229,7 +229,11 @@ class NextcloudCalendar implements AdapterInterface
 
     final public function directoryExists(string $path): bool
     {
-        return $this->fileExists($path);
+        $calendarId = $this->getCalendarId($path);
+        if ($calendarId !== null) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -337,7 +341,6 @@ class NextcloudCalendar implements AdapterInterface
 
     private function normalizeAcl($acl) {
         return [
-            'basename' => '.acl',
             'contents' => $acl,
             'mimetype' => 'text/turtle',
             'path' => '.acl',
@@ -354,7 +357,6 @@ class NextcloudCalendar implements AdapterInterface
         }
 
         return [
-            'basename' => $calendarItem['uri'],
             'contents' => $calendarItem['calendardata'],
             'mimetype' => 'text/calendar',
             'path' => $basePath . '/' . $calendarItem['uri'],
@@ -368,8 +370,6 @@ class NextcloudCalendar implements AdapterInterface
     private function normalizeCalendar($calendar)
     {
         return [
-            'basename' => basename($calendar['uri']),
-            'mimetype' => 'directory',
             'path' => $calendar['uri'],
             'size' => 0,
             'timestamp' => 0,

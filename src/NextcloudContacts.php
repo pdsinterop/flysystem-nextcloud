@@ -216,7 +216,7 @@ class NextcloudContacts implements FilesystemAdapter
 
         $addressBookId = $this->getAddressBookId($path);
         if ($addressBookId !== null) {
-            return true;
+            return false;
         } else {
             list($addressBook, $filename) = $this->splitPath($path);
             $addressBookId = $this->getAddressBookId($addressBook);
@@ -235,7 +235,11 @@ class NextcloudContacts implements FilesystemAdapter
      */
     final public function directoryExists(string $path): bool
     {
-        return $this->fileExists($path);
+        $addressBookId = $this->getAddressBookId($path);
+        if ($addressBookId !== null) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -348,7 +352,6 @@ class NextcloudContacts implements FilesystemAdapter
 
     private function normalizeAcl($acl) {
         return [
-            'basename' => '.acl',
             'contents' => $acl,
             'mimetype' => 'text/turtle',
             'path' => '.acl',
@@ -365,7 +368,6 @@ class NextcloudContacts implements FilesystemAdapter
         }
 
         return [
-            'basename' => $card['uri'],
             'contents' => $card['carddata'],
             'mimetype' => 'text/vcard',
             'path' => $basePath . '/' . $card['uri'],
@@ -379,8 +381,6 @@ class NextcloudContacts implements FilesystemAdapter
     private function normalizeAddressBook($addressBook)
     {
         return [
-            'basename' => basename($addressBook['uri']),
-            'mimetype' => 'directory',
             'path' => $addressBook['uri'],
             'size' => 0,
             'timestamp' => 0,

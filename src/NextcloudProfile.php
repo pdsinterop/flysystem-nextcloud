@@ -169,7 +169,10 @@ class NextcloudProfile implements FilesystemAdapter
      */
     final public function directoryExists(string $path): bool
     {
-        return $this->fileExists($path);
+        if ($path === '/') {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -253,7 +256,6 @@ class NextcloudProfile implements FilesystemAdapter
 
     private function normalizeAcl($acl) {
         return [
-            'basename' => '.acl',
             'contents' => $acl,
             'mimetype' => 'text/turtle',
             'path' => '.acl',
@@ -267,7 +269,6 @@ class NextcloudProfile implements FilesystemAdapter
     private function normalizeProfile() {
         $profile = $this->profile;
         return [
-            'basename' => 'card',
             'contents' => $profile,
             'mimetype' => 'text/turtle',
             'path' => "card",

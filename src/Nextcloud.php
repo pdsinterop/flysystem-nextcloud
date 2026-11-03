@@ -92,7 +92,7 @@ class Nextcloud implements FilesystemAdapter
     }
 
     /**
-     * Get all the meta data of a file or directory.
+     * Get all the meta data of a file
      *
      * @param string $path
      *
@@ -170,7 +170,12 @@ class Nextcloud implements FilesystemAdapter
      */
     final public function fileExists(string $path): bool
     {
-        return $this->folder->nodeExists($path);
+        try {
+            $node = $this->folder->get($path);
+            return !$this->isDirectory($node);
+        } catch (\OCP\Files\NotFoundException $exception) {
+            return false;
+        }
     }
 
     /**
@@ -182,7 +187,12 @@ class Nextcloud implements FilesystemAdapter
      */
     final public function directoryExists(string $path): bool
     {
-        return $this->folder->nodeExists($path);
+        try {
+            $node = $this->folder->get($path);
+            return $this->isDirectory($node);
+        } catch (\OCP\Files\NotFoundException $exception) {
+            return false;
+        }
     }
 
     /**
@@ -384,10 +394,9 @@ class Nextcloud implements FilesystemAdapter
     private function normalizeNodeInfo(\OCP\Files\Node $node, array $metaData = []) : array
     {
         return array_merge([
-            'mimetype' => $this->isDirectory($node) ? "directory" : $node->getMimetype(),
+            'mimetype' => $node->getMimetype(),
             'path' => substr($node->getPath(), strlen($this->folder->getPath())+1),
             'size' => $node->getSize(),
-            'basename' => basename($node->getPath()),
             'timestamp' => $node->getMTime(),
             'type' => $node->getType(),
             // @FIXME: Use $node->getPermissions() to set private or public
