@@ -4,6 +4,7 @@ namespace Pdsinterop\Flysystem\Adapter;
 
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\Config;
 use OCP\Files\Folder;
 

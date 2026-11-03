@@ -2,8 +2,10 @@
 
 namespace Pdsinterop\Flysystem\Adapter;
 
-use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemAdapter;
 
 use OC;
 use OCA\DAV\CalDAV\CalDavBackend;
@@ -16,7 +18,7 @@ use Sabre\DAV\Exception\BadRequest;
 /**
  * Filesystem adapter to access calendar information from Nextcloud
  */
-class NextcloudCalendar implements AdapterInterface
+class NextcloudCalendar implements FilesystemAdapter
 {
     /** @var CalDavBackend */
     private $calDavBackend;
